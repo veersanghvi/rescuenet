@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import Database from 'better-sqlite3';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+import crypto from 'crypto';
 
 dotenv.config({ path: '.env.local' });
 
@@ -11,6 +12,21 @@ db.pragma('foreign_keys = ON');
 
 // Initialize DB (only creates if not exists — never drops)
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'volunteer')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS ngos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -55,6 +71,29 @@ try {
   db.exec(`ALTER TABLE cases ADD COLUMN reporter_token TEXT`);
 } catch {
   // Column already exists, ignore
+}
+
+// Password hashing
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, stored: string): boolean {
+  const [salt, hash] = stored.split(':');
+  const testHash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(testHash, 'hex'));
+}
+
+function generateToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Seed default admin (admin / admin123)
+const adminExists = db.prepare('SELECT COUNT(*) as c FROM users WHERE role = ?').get('admin') as { c: number };
+if (adminExists.c === 0) {
+  db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run('admin', hashPassword('admin123'), 'admin');
 }
 
 // Seed data
@@ -134,6 +173,86 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Auth middleware — extracts user from session token
+  function getUser(req: express.Request): { id: number; username: string; role: string } | null {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return null;
+    const session = db.prepare(`
+      SELECT u.id, u.username, u.role FROM sessions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.token = ?
+    `).get(token) as any;
+    return session || null;
+  }
+
+  function requireRole(...roles: string[]) {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const user = getUser(req);
+      if (!user) return res.status(401).json({ error: 'Not authenticated' });
+      if (!roles.includes(user.role)) return res.status(403).json({ error: 'Insufficient permissions' });
+      (req as any).user = user;
+      next();
+    };
+  }
+
+  // --- Auth Routes ---
+  app.post('/api/auth/login', (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+
+    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
+    if (!user || !verifyPassword(password, user.password_hash)) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken();
+    db.prepare('INSERT INTO sessions (token, user_id) VALUES (?, ?)').run(token, user.id);
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+    res.json({ success: true });
+  });
+
+  app.get('/api/auth/me', (req, res) => {
+    const user = getUser(req);
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
+    res.json(user);
+  });
+
+  // Admin only: create volunteer accounts
+  app.post('/api/auth/users', requireRole('admin'), (req, res) => {
+    const { username, password, role } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    if (!['admin', 'volunteer'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+
+    try {
+      const hash = hashPassword(password);
+      const info = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run(username, hash, role);
+      res.status(201).json({ id: info.lastInsertRowid, username, role });
+    } catch (err: any) {
+      if (err.message?.includes('UNIQUE')) return res.status(409).json({ error: 'Username already exists' });
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
+
+  app.get('/api/auth/users', requireRole('admin'), (_req, res) => {
+    const users = db.prepare('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC').all();
+    res.json(users);
+  });
+
+  app.delete('/api/auth/users/:id', requireRole('admin'), (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    if (Number(id) === user.id) return res.status(400).json({ error: 'Cannot delete yourself' });
+    const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    if (result.changes === 0) return res.status(404).json({ error: 'User not found' });
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+    res.json({ success: true });
+  });
+
   // API Routes
   app.get('/api/ngos', (req, res) => {
     const { lat, lng, species, radius, q, all } = req.query;
@@ -193,8 +312,8 @@ async function startServer() {
     res.json(ngos);
   });
 
-  // --- NGO CRUD ---
-  app.post('/api/ngos', (req, res) => {
+  // --- NGO CRUD (volunteer or admin) ---
+  app.post('/api/ngos', requireRole('admin', 'volunteer'), (req, res) => {
     const { name, phone, address, lat, lng, coverage_radius, species } = req.body;
 
     if (!name || !phone || !address || lat === undefined || lng === undefined) {
@@ -222,7 +341,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/ngos/:id', (req, res) => {
+  app.delete('/api/ngos/:id', requireRole('admin', 'volunteer'), (req, res) => {
     const { id } = req.params;
     const result = db.prepare('DELETE FROM ngos WHERE id = ?').run(id);
     if (result.changes === 0) {
@@ -259,7 +378,7 @@ async function startServer() {
     }
   });
 
-  app.get('/api/cases', (req, res) => {
+  app.get('/api/cases', requireRole('admin', 'volunteer'), (req, res) => {
     const cases = db.prepare('SELECT id, species, description, lat, lng, status, created_at FROM cases ORDER BY created_at DESC').all();
     res.json(cases);
   });
@@ -275,7 +394,7 @@ async function startServer() {
     res.json({ ...caseRow, updates });
   });
 
-  app.patch('/api/cases/:id/status', (req, res) => {
+  app.patch('/api/cases/:id/status', requireRole('admin', 'volunteer'), (req, res) => {
     const { id } = req.params;
     const { status, note } = req.body;
 
