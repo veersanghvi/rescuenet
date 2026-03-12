@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, AlertCircle, Dog, Cat, Bird, Bug, ArrowRight, Search } from 'lucide-react';
+import { Phone, Dog, Cat, Bird, Bug, Search, Navigation, AlertCircle, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Markdown from 'react-markdown';
 import { useToast } from '../components/Toast';
 
 const ANIMAL_TYPES = [
@@ -14,312 +13,224 @@ const ANIMAL_TYPES = [
 
 export default function Home() {
   const { toast } = useToast();
+  const [query, setQuery] = useState('');
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [locating, setLocating] = useState(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [searchRadius, setSearchRadius] = useState<number>(20);
+  const [searchRadius, setSearchRadius] = useState(50);
   const [ngos, setNgos] = useState<any[]>([]);
-  const [loadingNgos, setLoadingNgos] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<{text: string, chunks: any[]} | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const performSearch = useCallback(async (query: string, loc?: {lat: number, lng: number} | null) => {
-    if (!query.trim()) return;
-    setIsSearching(true);
+  const fetchNgos = async (overrides?: { q?: string; species?: string | null; loc?: {lat: number, lng: number} | null; radius?: number }) => {
+    setLoading(true);
     try {
-      const body: any = { query };
-      const effectiveLoc = loc !== undefined ? loc : location;
-      if (effectiveLoc) {
-        body.lat = effectiveLoc.lat;
-        body.lng = effectiveLoc.lng;
-      }
-      const res = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error('Search failed');
-      const data = await res.json();
-      setSearchResults({ text: data.text, chunks: data.chunks || [] });
-    } catch {
-      setSearchResults({ text: 'Sorry, search is unavailable right now. Please try again later.', chunks: [] });
-    } finally {
-      setIsSearching(false);
-    }
-  }, [location]);
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSelectedType(null);
-    performSearch(searchQuery);
-  };
-
-  const fetchNgos = useCallback(async (loc?: {lat: number, lng: number} | null, species?: string | null, radius?: number) => {
-    setLoadingNgos(true);
-    try {
-      let url = '/api/ngos';
       const params = new URLSearchParams();
-      const effectiveLoc = loc !== undefined ? loc : location;
-      const effectiveSpecies = species !== undefined ? species : selectedType;
-      const effectiveRadius = radius !== undefined ? radius : searchRadius;
+      const q = overrides?.q ?? query;
+      const species = overrides?.species !== undefined ? overrides.species : selectedType;
+      const loc = overrides?.loc !== undefined ? overrides.loc : location;
+      const radius = overrides?.radius ?? searchRadius;
 
-      if (effectiveLoc) {
-        params.append('lat', effectiveLoc.lat.toString());
-        params.append('lng', effectiveLoc.lng.toString());
-        params.append('radius', effectiveRadius.toString());
+      if (q.trim()) params.append('q', q.trim());
+      if (species) params.append('species', species);
+      if (loc) {
+        params.append('lat', loc.lat.toString());
+        params.append('lng', loc.lng.toString());
+        params.append('radius', radius.toString());
       }
-      if (effectiveSpecies) {
-        params.append('species', effectiveSpecies);
-      }
-      if (params.toString()) {
-        url += '?' + params.toString();
-      }
-      
-      const res = await fetch(url);
+
+      const res = await fetch(`/api/ngos${params.toString() ? '?' + params : ''}`);
       const data = await res.json();
       setNgos(Array.isArray(data) ? data : []);
     } catch {
       toast('Failed to load NGOs', 'error');
     } finally {
-      setLoadingNgos(false);
-    }
-  }, [location, selectedType, searchRadius, toast]);
-
-  const getLocation = () => {
-    setLocating(true);
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setLocation(loc);
-          setLocating(false);
-          fetchNgos(loc);
-          toast('Location detected', 'success');
-        },
-        () => {
-          setLocating(false);
-          toast('Could not get location. Showing all NGOs.', 'error');
-          fetchNgos(null);
-        }
-      );
-    } else {
-      setLocating(false);
-      fetchNgos(null);
+      setLoading(false);
     }
   };
 
+  // Debounced search on query change
   useEffect(() => {
-    fetchNgos();
-  }, [selectedType, searchRadius]);
+    const t = setTimeout(() => fetchNgos(), query ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [query, selectedType, searchRadius]);
 
+  // Re-fetch when location changes (not debounced)
   useEffect(() => {
-    if (selectedType) {
-      const animalLabel = ANIMAL_TYPES.find(t => t.id === selectedType)?.label || selectedType;
-      const query = `animal rescue for ${animalLabel}`;
-      setSearchQuery(query);
-      performSearch(query);
-    }
-  }, [selectedType]);
+    if (location) fetchNgos({ loc: location });
+  }, [location]);
 
-  const filteredNgos = Array.isArray(ngos) ? ngos : [];
+  const getLocation = () => {
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        toast('Location detected', 'success');
+      },
+      () => {
+        setLocating(false);
+        toast('Could not get location', 'error');
+      }
+    );
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-6"
-    >
-      <section className="bg-red-50 border border-red-100 rounded-2xl p-5 flex flex-col gap-3">
-        <div className="flex items-center gap-2 text-red-700 font-semibold">
-          <AlertCircle className="w-5 h-5" />
-          <h2>Emergency Rescue</h2>
-        </div>
-        <p className="text-sm text-red-600/80">
-          Find the nearest animal rescue NGO or report an injured animal immediately.
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5 pb-24">
+      {/* Hero */}
+      <section className="pt-2">
+        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight">
+          Find rescue help<br />for animals nearby
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          Search {ngos.length > 0 ? `${ngos.length}+` : ''} verified rescue organizations across India
         </p>
-        <Link 
-          to="/report" 
-          className="mt-2 bg-red-600 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
-        >
-          Report Injured Animal
-          <ArrowRight className="w-4 h-4" />
-        </Link>
       </section>
 
+      {/* Search + Filters */}
       <section className="flex flex-col gap-3">
-        <form onSubmit={handleSearch} className="relative">
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search NGOs by name or location..."
-            className="w-full bg-white border border-stone-200 rounded-xl pl-10 pr-24 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+        <div className="relative">
+          <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search by name, city, or area..."
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 shadow-sm dark:shadow-none"
           />
-          <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
-          <button type="submit" disabled={isSearching} className="absolute right-2 top-1/2 -translate-y-1/2 bg-stone-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-stone-800 disabled:opacity-50 transition-colors">
-            {isSearching ? 'Searching...' : 'Search'}
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={getLocation}
+            disabled={locating}
+            className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-2 rounded-xl transition-all disabled:opacity-50 ${
+              location
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
+                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
+            }`}
+          >
+            <Navigation className="w-3.5 h-3.5" />
+            {locating ? 'Locating...' : location ? 'Near me' : 'Use location'}
           </button>
-        </form>
-
-        {searchResults && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-stone-800">Search Results</h3>
-              <button onClick={() => setSearchResults(null)} className="text-xs font-medium text-stone-500 hover:text-stone-800">Clear</button>
+          {location && (
+            <div className="flex items-center gap-2 flex-1 min-w-[140px]">
+              <input
+                type="range" min="5" max="100" value={searchRadius}
+                onChange={e => setSearchRadius(Number(e.target.value))}
+                className="flex-1 accent-red-600 h-1"
+              />
+              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-12 text-right">{searchRadius} km</span>
             </div>
-            <div className="text-sm text-stone-700 prose prose-sm max-w-none leading-relaxed">
-              <Markdown>{searchResults.text}</Markdown>
-            </div>
-            {searchResults.chunks && searchResults.chunks.length > 0 && (
-              <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-stone-100">
-                <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Map Listings</h4>
-                <div className="flex flex-col gap-2">
-                  {searchResults.chunks.map((chunk: any, i: number) => {
-                    if (chunk.maps) {
-                      return (
-                        <a key={i} href={chunk.maps.uri} target="_blank" rel="noopener noreferrer" className="flex flex-col p-2 rounded-lg border border-stone-100 hover:bg-stone-50 transition-colors">
-                          <span className="font-medium text-stone-900 text-sm">{chunk.maps.title}</span>
-                          <span className="text-xs text-blue-600 truncate">{chunk.maps.uri}</span>
-                        </a>
-                      );
-                    } else if (chunk.web) {
-                       return (
-                        <a key={i} href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex flex-col p-2 rounded-lg border border-stone-100 hover:bg-stone-50 transition-colors">
-                          <span className="font-medium text-stone-900 text-sm">{chunk.web.title}</span>
-                          <span className="text-xs text-blue-600 truncate">{chunk.web.uri}</span>
-                        </a>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-stone-800">Animal Type</h3>
-          {selectedType && (
-            <button 
-              onClick={() => {
-                setSelectedType(null);
-                setSearchQuery('');
-                setSearchResults(null);
-              }}
-              className="text-xs text-stone-500 hover:text-stone-800 font-medium"
-            >
-              Clear
-            </button>
           )}
         </div>
-        <div className="grid grid-cols-4 gap-3">
+
+        {/* Animal type chips */}
+        <div className="flex gap-2">
           {ANIMAL_TYPES.map(type => {
             const Icon = type.icon;
-            const isSelected = selectedType === type.id;
+            const active = selectedType === type.id;
             return (
               <button
                 key={type.id}
-                onClick={() => setSelectedType(type.id)}
-                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
-                  isSelected 
-                    ? 'bg-stone-900 border-stone-900 text-white shadow-md' 
-                    : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300 hover:bg-stone-50'
+                onClick={() => setSelectedType(active ? null : type.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
+                  active
+                    ? 'bg-gray-900 dark:bg-white border-gray-900 dark:border-white text-white dark:text-gray-900 shadow-sm'
+                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                 }`}
               >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs font-medium">{type.label}</span>
+                <Icon className="w-3.5 h-3.5" />
+                {type.label}
               </button>
             );
           })}
         </div>
       </section>
 
+      {/* Results */}
       <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-stone-800">Nearest NGOs</h3>
-            <button 
-              onClick={getLocation}
-              disabled={locating}
-              className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md hover:bg-blue-100 transition-colors"
-            >
-              <MapPin className="w-3 h-3" />
-              {locating ? 'Locating...' : location ? 'Location Active' : 'Use Location'}
-            </button>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          {loading ? 'Searching...' : `${ngos.length} organization${ngos.length !== 1 ? 's' : ''} found`}
+        </h3>
+
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-2/3 mb-2" />
+                <div className="h-3 bg-gray-100 dark:bg-gray-800/60 rounded w-1/2 mb-3" />
+                <div className="flex gap-1.5 mb-3">
+                  <div className="h-5 w-12 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                  <div className="h-5 w-10 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                </div>
+                <div className="h-10 bg-gray-100 dark:bg-gray-800/60 rounded-xl" />
+              </div>
+            ))}
           </div>
-          {location && (
-            <div className="flex items-center gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
-              <label className="text-xs font-medium text-stone-600 whitespace-nowrap">
-                Radius: {searchRadius} km
-              </label>
-              <input 
-                type="range" 
-                min="1" 
-                max="100" 
-                value={searchRadius} 
-                onChange={(e) => setSearchRadius(Number(e.target.value))}
-                className="w-full accent-red-600"
-              />
+        ) : ngos.length === 0 ? (
+          <div className="text-center py-16 flex flex-col items-center gap-3">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             </div>
-          )}
-        </div>
+            <div>
+              <p className="text-gray-600 dark:text-gray-300 font-medium text-sm">No organizations found</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Try a different search or broaden the radius</p>
+            </div>
+          </div>
+        ) : (
+          ngos.map((ngo, i) => (
+            <motion.div
+              key={ngo.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.03 }}
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+            >
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-[15px] leading-snug">{ngo.name}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{ngo.address}</span>
+                  </p>
+                </div>
+                {ngo.distance !== undefined && (
+                  <span className="text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-lg shrink-0">
+                    {ngo.distance.toFixed(1)} km
+                  </span>
+                )}
+              </div>
 
-        <div className="flex flex-col gap-3">
-          {loadingNgos ? (
-            <div className="text-center py-8 text-stone-400 text-sm">Loading NGOs...</div>
-          ) : filteredNgos.length === 0 ? (
-            <div className="text-center py-8 text-stone-400 text-sm bg-white rounded-2xl border border-stone-100">
-              No NGOs found for this animal type.
-            </div>
-          ) : (
-            filteredNgos.map((ngo, idx) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                key={ngo.id} 
-                className="bg-white border border-stone-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm"
+              <div className="flex flex-wrap gap-1.5">
+                {ngo.species?.map((s: string) => (
+                  <span key={s} className="text-[10px] uppercase tracking-wider font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+                    {s}
+                  </span>
+                ))}
+              </div>
+
+              <a
+                href={`tel:${ngo.phone}`}
+                className="flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-stone-900">{ngo.name}</h4>
-                    <p className="text-sm text-stone-500 mt-0.5">{ngo.address}</p>
-                  </div>
-                  {ngo.distance !== undefined && (
-                    <span className="text-xs font-medium bg-stone-100 text-stone-600 px-2 py-1 rounded-md">
-                      {ngo.distance.toFixed(1)} km
-                    </span>
-                  )}
-                </div>
-                
-                <div className="flex flex-wrap gap-1.5">
-                  {ngo.species.map((t: string) => (
-                    <span key={t} className="text-[10px] uppercase tracking-wider font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <a 
-                  href={`tel:${ngo.phone}`}
-                  className="mt-1 w-full flex items-center justify-center gap-2 bg-stone-900 text-white py-2.5 rounded-xl font-medium hover:bg-stone-800 transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                  Call {ngo.phone}
-                </a>
-              </motion.div>
-            ))
-          )}
-        </div>
+                <Phone className="w-4 h-4" />
+                {ngo.phone}
+              </a>
+            </motion.div>
+          ))
+        )}
       </section>
+
+      {/* Floating Emergency Button */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
+        <Link
+          to="/report"
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-3.5 px-8 rounded-2xl shadow-lg shadow-red-600/25 dark:shadow-red-600/15 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <AlertCircle className="w-5 h-5" />
+          Report Emergency
+        </Link>
+      </div>
     </motion.div>
   );
 }

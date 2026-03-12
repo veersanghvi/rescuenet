@@ -11,9 +11,11 @@ import TrackCase from './pages/TrackCase';
 import NotFound from './pages/NotFound';
 import Layout from './components/Layout';
 import { ToastProvider } from './components/Toast';
+import { ThemeProvider } from './components/Theme';
 
 export default function App() {
   return (
+    <ThemeProvider>
     <ToastProvider>
       <BrowserRouter>
         <Routes>
@@ -27,5 +29,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ToastProvider>
+    </ThemeProvider>
   );
 }

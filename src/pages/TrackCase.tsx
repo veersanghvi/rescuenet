@@ -5,9 +5,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  pending: { label: 'Pending', color: 'text-amber-700 bg-amber-50 border-amber-200', icon: Clock },
-  in_progress: { label: 'In Progress', color: 'text-blue-700 bg-blue-50 border-blue-200', icon: Loader },
-  resolved: { label: 'Resolved', color: 'text-emerald-700 bg-emerald-50 border-emerald-200', icon: CheckCircle },
+  pending: { label: 'Pending', color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800', icon: Clock },
+  in_progress: { label: 'In Progress', color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-800', icon: Loader },
+  resolved: { label: 'Resolved', color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800', icon: CheckCircle },
 };
 
 export default function TrackCase() {
@@ -59,10 +59,10 @@ export default function TrackCase() {
       className="flex flex-col gap-6"
     >
       <div className="flex items-center gap-3">
-        <Link to="/" className="p-2 -ml-2 text-stone-500 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-colors">
+        <Link to="/" className="p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-bold text-xl text-stone-900">Track Your Case</h1>
+        <h1 className="font-bold text-xl text-gray-900 dark:text-white">Track Your Case</h1>
       </div>
 
       <form onSubmit={handleTrack} className="flex gap-2">
@@ -71,23 +71,23 @@ export default function TrackCase() {
           value={token}
           onChange={(e) => setToken(e.target.value)}
           placeholder="Enter tracking code..."
-          className="flex-1 bg-white border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-mono"
+          className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-mono"
         />
-        <button type="submit" disabled={loading} className="bg-stone-900 text-white px-5 rounded-xl font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 flex items-center gap-2">
+        <button type="submit" disabled={loading} className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
           <Search className="w-4 h-4" />
         </button>
       </form>
 
       {loading && (
-        <div className="text-center py-8 text-stone-400 text-sm">Looking up case...</div>
+        <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">Looking up case...</div>
       )}
 
       {notFound && (
         <div className="text-center py-8 flex flex-col items-center gap-3">
-          <AlertCircle className="w-10 h-10 text-stone-300" />
+          <AlertCircle className="w-10 h-10 text-gray-300 dark:text-gray-600" />
           <div>
-            <p className="text-stone-600 font-medium">Case not found</p>
-            <p className="text-stone-400 text-sm mt-1">Double-check your tracking code and try again.</p>
+            <p className="text-gray-600 dark:text-gray-300 font-medium">Case not found</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Double-check your tracking code and try again.</p>
           </div>
         </div>
       )}
@@ -98,13 +98,13 @@ export default function TrackCase() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col gap-4"
         >
-          <div className="bg-white border border-stone-200 rounded-2xl p-5 flex flex-col gap-4">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2 py-1 rounded-md w-fit">
+                <span className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-md w-fit">
                   {caseData.species}
                 </span>
-                <span className="text-xs text-stone-400 mt-1">
+                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   Reported {new Date(caseData.created_at).toLocaleString()}
                 </span>
               </div>
@@ -115,10 +115,10 @@ export default function TrackCase() {
             </div>
 
             {caseData.description && (
-              <p className="text-sm text-stone-700">{caseData.description}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{caseData.description}</p>
             )}
 
-            <div className="text-xs text-stone-500 flex items-center gap-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               {caseData.lat.toFixed(4)}, {caseData.lng.toFixed(4)}
             </div>
@@ -126,7 +126,7 @@ export default function TrackCase() {
 
           {caseData.updates && caseData.updates.length > 0 && (
             <div className="flex flex-col gap-3">
-              <h3 className="font-semibold text-stone-800 text-sm">Timeline</h3>
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">Timeline</h3>
               <div className="relative flex flex-col gap-0">
                 {caseData.updates.map((update: any, i: number) => {
                   const isLast = i === caseData.updates.length - 1;
@@ -138,12 +138,12 @@ export default function TrackCase() {
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${config.color} shrink-0`}>
                           <Icon className="w-3.5 h-3.5" />
                         </div>
-                        {!isLast && <div className="w-px flex-1 bg-stone-200 my-1" />}
+                        {!isLast && <div className="w-px flex-1 bg-gray-200 dark:bg-gray-700 my-1" />}
                       </div>
                       <div className={`pb-4 flex flex-col gap-0.5 ${isLast ? '' : ''}`}>
-                        <span className="text-sm font-medium text-stone-800 capitalize">{update.status.replace('_', ' ')}</span>
-                        {update.note && <span className="text-xs text-stone-500">{update.note}</span>}
-                        <span className="text-[10px] text-stone-400">{new Date(update.created_at).toLocaleString()}</span>
+                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">{update.status.replace('_', ' ')}</span>
+                        {update.note && <span className="text-xs text-gray-500 dark:text-gray-400">{update.note}</span>}
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">{new Date(update.created_at).toLocaleString()}</span>
                       </div>
                     </div>
                   );
@@ -156,7 +156,7 @@ export default function TrackCase() {
 
       {!caseData && !notFound && !loading && (
         <div className="text-center py-6 flex flex-col items-center gap-2">
-          <p className="text-stone-400 text-sm">Enter the tracking code you received when reporting a case.</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Enter the tracking code you received when reporting a case.</p>
         </div>
       )}
     </motion.div>

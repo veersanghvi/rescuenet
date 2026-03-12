@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Don't transition everything — exclude transforms/opacity used by animations */
+.no-theme-transition,
+.no-theme-transition * {
+  transition-property: none !important;
+}
+
+/* Dark mode map tiles */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.8) contrast(1.1) saturate(0.8);
+}
+
+.dark .leaflet-container {
+  background: #1a1a2e;
+}

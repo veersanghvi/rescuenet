@@ -65,11 +65,26 @@ if (count === 0) {
   const insertSpecies = db.prepare('INSERT INTO ngo_species (ngo_id, species) VALUES (?, ?)');
   
   const seedNgos = [
-    { name: 'City Animal Rescue', phone: '+1234567890', address: '123 Main St', lat: 37.7749, lng: -122.4194, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird'] },
-    { name: 'Wildlife Haven', phone: '+1987654321', address: '456 Forest Rd', lat: 37.7849, lng: -122.4094, radius: 50, accepting: 1, species: ['wildlife', 'bird'] },
-    { name: 'Feline Friends', phone: '+1122334455', address: '789 Cat Alley', lat: 37.7649, lng: -122.4294, radius: 10, accepting: 1, species: ['cat'] },
-    { name: 'Avian Rescue Center', phone: '+1555666777', address: '101 Skyway', lat: 37.7949, lng: -122.3994, radius: 30, accepting: 1, species: ['bird'] },
-    { name: 'All Paws Sanctuary', phone: '+1888999000', address: '202 Country Rd', lat: 37.7549, lng: -122.4394, radius: 25, accepting: 0, species: ['dog', 'cat'] },
+    { name: 'People For Animals', phone: '+91 11 2371 9293', address: '14 Ashoka Road, New Delhi', lat: 28.6280, lng: 77.2197, radius: 50, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Friendicoes SECA', phone: '+91 11 2431 5480', address: 'Jangpura, New Delhi', lat: 28.5846, lng: 77.2445, radius: 25, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Sanjay Gandhi Animal Care Centre', phone: '+91 11 2374 3900', address: 'Raja Garden, New Delhi', lat: 28.6519, lng: 77.1168, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Blue Cross of India', phone: '+91 44 2254 0758', address: 'Velachery Road, Guindy, Chennai', lat: 13.0067, lng: 80.2206, radius: 30, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'IDA India', phone: '+91 44 2441 2442', address: 'Besant Nagar, Chennai', lat: 12.9986, lng: 80.2669, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    { name: 'CUPA Bangalore', phone: '+91 80 2557 1024', address: 'Veterinary College Campus, Hebbal, Bangalore', lat: 13.0358, lng: 77.5970, radius: 35, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
+    { name: 'Charlie\'s Animal Rescue Centre', phone: '+91 98450 24935', address: 'Sarjapur Road, Bangalore', lat: 12.9081, lng: 77.6736, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    { name: 'The Welfare of Stray Dogs', phone: '+91 22 2655 3812', address: 'Parel, Mumbai', lat: 18.9988, lng: 72.8400, radius: 30, accepting: 1, species: ['dog'] },
+    { name: 'Red Paws Rescue', phone: '+91 90290 60022', address: 'Andheri West, Mumbai', lat: 19.1197, lng: 72.8464, radius: 20, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Bombay SPCA', phone: '+91 22 2413 6053', address: 'Parel, Mumbai', lat: 19.0033, lng: 72.8426, radius: 35, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Animal Aid Unlimited', phone: '+91 294 2490489', address: 'Badi Village, Udaipur', lat: 24.6222, lng: 73.6783, radius: 45, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Wildlife SOS', phone: '+91 120 4538015', address: 'Agra-Mathura Road, Agra', lat: 27.3076, lng: 77.8557, radius: 60, accepting: 1, species: ['wildlife', 'bird'] },
+    { name: 'Visakha SPCA', phone: '+91 891 254 6254', address: 'Maddilapalem, Visakhapatnam', lat: 17.7340, lng: 83.3152, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Animal Rahat', phone: '+91 233 2321 405', address: 'Sangli, Maharashtra', lat: 16.8547, lng: 74.5646, radius: 40, accepting: 1, species: ['dog', 'wildlife'] },
+    { name: 'PAWS Kolkata', phone: '+91 33 2486 1462', address: 'Tollygunge, Kolkata', lat: 22.4972, lng: 88.3473, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    { name: 'Karuna Society for Animals', phone: '+91 8518 277246', address: 'Puttaparthi, Andhra Pradesh', lat: 14.1650, lng: 77.8115, radius: 35, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
+    { name: 'Help in Suffering', phone: '+91 141 276 0013', address: 'Maharani Farm, Durgapura, Jaipur', lat: 26.8454, lng: 75.8191, radius: 30, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'PFA Dehradun', phone: '+91 135 274 2461', address: 'Vasant Vihar, Dehradun', lat: 30.3165, lng: 78.0322, radius: 25, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
+    { name: 'Jeev Ashram', phone: '+91 522 277 0888', address: 'Chinhat, Lucknow', lat: 26.8905, lng: 81.0245, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    { name: 'Krupa Animal Hospital', phone: '+91 79 2646 1182', address: 'Satellite, Ahmedabad', lat: 23.0225, lng: 72.5714, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
   ];
 
   const insertMany = db.transaction((ngos) => {
@@ -106,24 +121,37 @@ async function startServer() {
 
   // API Routes
   app.get('/api/ngos', (req, res) => {
-    const { lat, lng, species, radius } = req.query;
+    const { lat, lng, species, radius, q, all } = req.query;
     
-    let query = `
-      SELECT n.*, GROUP_CONCAT(s.species) as species_list
-      FROM ngos n
-      LEFT JOIN ngo_species s ON n.id = s.ngo_id
-      WHERE n.is_accepting_cases = 1
-    `;
+    const conditions: string[] = [];
     const params: any[] = [];
 
+    if (!all) {
+      conditions.push('n.is_accepting_cases = 1');
+    }
+
     if (species) {
-      query += ` AND n.id IN (SELECT ngo_id FROM ngo_species WHERE species = ?)`;
+      conditions.push('n.id IN (SELECT ngo_id FROM ngo_species WHERE species = ?)');
       params.push(species);
     }
 
-    query += ` GROUP BY n.id`;
+    if (q) {
+      conditions.push('(n.name LIKE ? OR n.address LIKE ?)');
+      const term = `%${q}%`;
+      params.push(term, term);
+    }
 
-    const ngos = db.prepare(query).all(...params).map((ngo: any) => ({
+    let sql = `
+      SELECT n.*, GROUP_CONCAT(s.species) as species_list
+      FROM ngos n
+      LEFT JOIN ngo_species s ON n.id = s.ngo_id
+    `;
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+    sql += ' GROUP BY n.id';
+
+    const ngos = db.prepare(sql).all(...params).map((ngo: any) => ({
       ...ngo,
       species: ngo.species_list ? ngo.species_list.split(',') : []
     }));

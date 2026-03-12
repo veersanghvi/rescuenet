@@ -111,27 +111,27 @@ export default function Report() {
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-6 py-8"
       >
-        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-          <CheckCircle className="w-8 h-8 text-emerald-600" />
+        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center">
+          <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div className="text-center flex flex-col gap-2">
-          <h2 className="text-xl font-bold text-stone-900">Case Submitted!</h2>
-          <p className="text-sm text-stone-500">Your rescue request has been received. Save your tracking code to check the status later.</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Case Submitted!</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Your rescue request has been received. Save your tracking code to check the status later.</p>
         </div>
-        <div className="w-full bg-stone-50 border border-stone-200 rounded-xl p-4 flex items-center justify-between gap-3">
+        <div className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-stone-500 font-medium">Tracking Code</span>
-            <span className="font-mono font-bold text-stone-900">{submittedToken}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Tracking Code</span>
+            <span className="font-mono font-bold text-gray-900 dark:text-white">{submittedToken}</span>
           </div>
-          <button onClick={copyToken} className="shrink-0 p-2 bg-white border border-stone-200 rounded-lg hover:bg-stone-100 transition-colors">
-            {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-stone-500" />}
+          <button onClick={copyToken} className="shrink-0 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            {copied ? <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
           </button>
         </div>
         <div className="flex flex-col gap-2 w-full">
-          <Link to={`/track?token=${submittedToken}`} className="w-full bg-stone-900 text-white font-medium py-3 rounded-xl text-center hover:bg-stone-800 transition-colors">
+          <Link to={`/track?token=${submittedToken}`} className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium py-3 rounded-xl text-center hover:opacity-90 transition-opacity">
             Track My Case
           </Link>
-          <Link to="/" className="w-full bg-stone-100 text-stone-700 font-medium py-3 rounded-xl text-center hover:bg-stone-200 transition-colors">
+          <Link to="/" className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium py-3 rounded-xl text-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
             Back to Home
           </Link>
         </div>
@@ -146,19 +146,19 @@ export default function Report() {
       className="flex flex-col gap-6"
     >
       <div className="flex items-center gap-3">
-        <Link to="/" className="p-2 -ml-2 text-stone-500 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-colors">
+        <Link to="/" className="p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-bold text-xl text-stone-900">Report Rescue</h1>
+        <h1 className="font-bold text-xl text-gray-900 dark:text-white">Report Rescue</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-stone-700">Animal Type</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Animal Type</label>
           <select 
             name="species" 
             required
-            className="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
           >
             <option value="">Select type...</option>
             <option value="dog">Dog</option>
@@ -170,21 +170,21 @@ export default function Report() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-stone-700">Location <span className="text-red-500">*</span></label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Location <span className="text-red-500">*</span></label>
           <div className="flex gap-2 mb-2">
-            <div className={`flex-1 border rounded-xl px-4 py-3 text-sm flex items-center ${location ? 'bg-white border-stone-200 text-stone-900' : 'bg-red-50 border-red-200 text-red-400'}`}>
+            <div className={`flex-1 border rounded-xl px-4 py-3 text-sm flex items-center ${location ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-800 text-red-400 dark:text-red-400'}`}>
               {location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Tap map or use GPS'}
             </div>
             <button 
               type="button"
               onClick={getLocation}
-              className="bg-stone-900 text-white px-4 rounded-xl flex items-center justify-center hover:bg-stone-800 transition-colors"
+              className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity"
             >
               <MapPin className="w-5 h-5" />
             </button>
           </div>
           
-          <div className="h-48 w-full rounded-xl overflow-hidden border border-stone-200 relative z-0">
+          <div className="h-48 w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 relative z-0">
             <MapContainer 
               center={location ? [location.lat, location.lng] : [37.7749, -122.4194]} 
               zoom={13} 
@@ -195,21 +195,21 @@ export default function Report() {
               <LocationMarker location={location} setLocation={setLocation} />
             </MapContainer>
           </div>
-          <p className="text-xs text-stone-500">Click on the map to manually set the rescue location.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Click on the map to manually set the rescue location.</p>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-stone-700">Description & Condition</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Description & Condition</label>
           <textarea 
             name="description" 
             required
             rows={4}
             placeholder="Describe the animal's condition, exact location details, etc."
-            className="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
           ></textarea>
         </div>
 
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 text-amber-800">
+        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-800 rounded-xl p-4 flex gap-3 text-amber-800 dark:text-amber-300">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <p className="text-xs leading-relaxed">
             Do not approach wild or aggressive animals. Keep a safe distance and wait for professional rescuers.
