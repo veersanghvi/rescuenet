@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 html {
@@ -22,7 +22,6 @@ body {
   transition-timing-function: ease;
 }
 
-/* Don't transition everything — exclude transforms/opacity used by animations */
 .no-theme-transition,
 .no-theme-transition * {
   transition-property: none !important;
@@ -34,5 +33,10 @@ body {
 }
 
 .dark .leaflet-container {
-  background: #1a1a2e;
+  background: #0f172a;
+}
+
+/* Custom range slider for teal accent */
+input[type="range"] {
+  accent-color: #0d9488;
 }

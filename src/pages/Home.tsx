@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Phone, Dog, Cat, Bird, Bug, Search, Navigation, AlertCircle, MapPin } from 'lucide-react';
+import { Phone, Search, Navigation, MapPin, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 
 const ANIMAL_TYPES = [
-  { id: 'dog', label: 'Dog', icon: Dog },
-  { id: 'cat', label: 'Cat', icon: Cat },
-  { id: 'bird', label: 'Bird', icon: Bird },
-  { id: 'wildlife', label: 'Wildlife', icon: Bug },
+  { id: 'dog', label: 'Dogs' },
+  { id: 'cat', label: 'Cats' },
+  { id: 'bird', label: 'Birds' },
+  { id: 'wildlife', label: 'Wildlife' },
 ];
 
 export default function Home() {
@@ -48,13 +47,11 @@ export default function Home() {
     }
   };
 
-  // Debounced search on query change
   useEffect(() => {
     const t = setTimeout(() => fetchNgos(), query ? 300 : 0);
     return () => clearTimeout(t);
   }, [query, selectedType, searchRadius]);
 
-  // Re-fetch when location changes (not debounced)
   useEffect(() => {
     if (location) fetchNgos({ loc: location });
   }, [location]);
@@ -75,27 +72,25 @@ export default function Home() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5 pb-24">
-      {/* Hero */}
-      <section className="pt-2">
-        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight">
-          Find rescue help<br />for animals nearby
+    <div className="flex flex-col gap-6 pb-24">
+      <section className="pt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+          Find animal rescue help nearby
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          Search {ngos.length > 0 ? `${ngos.length}+` : ''} verified rescue organizations across India
+        <p className="text-slate-500 dark:text-slate-400 mt-1.5 text-sm sm:text-base">
+          {ngos.length > 0 ? `${ngos.length} verified` : 'Verified'} rescue organizations across Mumbai
         </p>
       </section>
 
-      {/* Search + Filters */}
       <section className="flex flex-col gap-3">
         <div className="relative">
-          <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by name, city, or area..."
-            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 shadow-sm dark:shadow-none"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 dark:focus:border-teal-500"
           />
         </div>
 
@@ -103,10 +98,10 @@ export default function Home() {
           <button
             onClick={getLocation}
             disabled={locating}
-            className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-2 rounded-xl transition-all disabled:opacity-50 ${
+            className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-2 rounded-lg transition-all disabled:opacity-50 ${
               location
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
-                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
+                ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
             <Navigation className="w-3.5 h-3.5" />
@@ -117,29 +112,26 @@ export default function Home() {
               <input
                 type="range" min="5" max="100" value={searchRadius}
                 onChange={e => setSearchRadius(Number(e.target.value))}
-                className="flex-1 accent-red-600 h-1"
+                className="flex-1 h-1"
               />
-              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-12 text-right">{searchRadius} km</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium w-12 text-right">{searchRadius} km</span>
             </div>
           )}
         </div>
 
-        {/* Animal type chips */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 flex-wrap">
           {ANIMAL_TYPES.map(type => {
-            const Icon = type.icon;
             const active = selectedType === type.id;
             return (
               <button
                 key={type.id}
                 onClick={() => setSelectedType(active ? null : type.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                   active
-                    ? 'bg-gray-900 dark:bg-white border-gray-900 dark:border-white text-white dark:text-gray-900 shadow-sm'
-                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
+                    ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
                 {type.label}
               </button>
             );
@@ -147,90 +139,89 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Results */}
       <section className="flex flex-col gap-3">
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-          {loading ? 'Searching...' : `${ngos.length} organization${ngos.length !== 1 ? 's' : ''} found`}
-        </h3>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            {loading ? 'Searching...' : `${ngos.length} result${ngos.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
 
         {loading ? (
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-2/3 mb-2" />
-                <div className="h-3 bg-gray-100 dark:bg-gray-800/60 rounded w-1/2 mb-3" />
+              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 animate-pulse">
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3 mb-2" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-800/60 rounded w-1/2 mb-3" />
                 <div className="flex gap-1.5 mb-3">
-                  <div className="h-5 w-12 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
-                  <div className="h-5 w-10 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                  <div className="h-5 w-12 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                  <div className="h-5 w-10 bg-slate-100 dark:bg-slate-800/60 rounded" />
                 </div>
-                <div className="h-10 bg-gray-100 dark:bg-gray-800/60 rounded-xl" />
+                <div className="h-9 bg-slate-100 dark:bg-slate-800/60 rounded-lg" />
               </div>
             ))}
           </div>
         ) : ngos.length === 0 ? (
           <div className="text-center py-16 flex flex-col items-center gap-3">
-            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-              <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+              <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
             </div>
             <div>
-              <p className="text-gray-600 dark:text-gray-300 font-medium text-sm">No organizations found</p>
-              <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Try a different search or broaden the radius</p>
+              <p className="text-slate-600 dark:text-slate-300 font-medium text-sm">No organizations found</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Try a different search or broaden the radius</p>
             </div>
           </div>
         ) : (
-          ngos.map((ngo, i) => (
-            <motion.div
-              key={ngo.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
-            >
-              <div className="flex justify-between items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-[15px] leading-snug">{ngo.name}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{ngo.address}</span>
-                  </p>
-                </div>
-                {ngo.distance !== undefined && (
-                  <span className="text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-lg shrink-0">
-                    {ngo.distance.toFixed(1)} km
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {ngo.species?.map((s: string) => (
-                  <span key={s} className="text-[10px] uppercase tracking-wider font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
-                    {s}
-                  </span>
-                ))}
-              </div>
-
-              <a
-                href={`tel:${ngo.phone}`}
-                className="flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {ngos.map((ngo) => (
+              <div
+                key={ngo.id}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
-                <Phone className="w-4 h-4" />
-                {ngo.phone}
-              </a>
-            </motion.div>
-          ))
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm leading-snug">{ngo.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{ngo.address}</span>
+                    </p>
+                  </div>
+                  {ngo.distance !== undefined && (
+                    <span className="text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded shrink-0">
+                      {ngo.distance.toFixed(1)} km
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {ngo.species?.map((s: string) => (
+                    <span key={s} className="text-[10px] uppercase tracking-wider font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+
+                <a
+                  href={`tel:${ngo.phone}`}
+                  className="flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  {ngo.phone}
+                </a>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 
-      {/* Floating Emergency Button */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
         <Link
           to="/report"
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-3.5 px-8 rounded-2xl shadow-lg shadow-red-600/25 dark:shadow-red-600/15 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-6 rounded-lg shadow-lg shadow-teal-600/20 dark:shadow-teal-600/10 transition-all hover:shadow-xl"
         >
-          <AlertCircle className="w-5 h-5" />
-          Report Emergency
+          <Plus className="w-4 h-4" />
+          Report a rescue
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }

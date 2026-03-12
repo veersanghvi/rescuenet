@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MapPin, UserPlus, Trash2, Users, FileText, X, Shield, UserCheck } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowLeft, MapPin, UserPlus, Trash2, Users, FileText, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import { useAuth, authHeaders } from '../components/Auth';
@@ -93,71 +93,69 @@ export default function Admin() {
   const pendingCount = cases.filter(c => c.status === 'pending').length;
   const activeCount = cases.filter(c => c.status === 'in_progress').length;
 
+  const inputCls = "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500";
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
-      {/* Header */}
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/" className="p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <Link to="/" className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="font-bold text-lg text-gray-900 dark:text-white">Admin Panel</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Signed in as <span className="font-medium text-gray-700 dark:text-gray-300">{user?.username}</span></p>
+            <h1 className="font-bold text-lg text-slate-900 dark:text-white">Admin</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{user?.username}</p>
           </div>
         </div>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-900 rounded-xl px-3 py-2.5 text-center">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-900 rounded-lg px-3 py-2.5 text-center">
           <div className="text-lg font-bold text-amber-700 dark:text-amber-300">{pendingCount}</div>
           <div className="text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending</div>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900 rounded-xl px-3 py-2.5 text-center">
+        <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900 rounded-lg px-3 py-2.5 text-center">
           <div className="text-lg font-bold text-blue-700 dark:text-blue-300">{activeCount}</div>
           <div className="text-[10px] font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider">Active</div>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2.5 text-center">
-          <div className="text-lg font-bold text-gray-700 dark:text-gray-300">{users.length}</div>
-          <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff</div>
+        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg px-3 py-2.5 text-center">
+          <div className="text-lg font-bold text-slate-700 dark:text-slate-300">{users.length}</div>
+          <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Staff</div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-gray-100 dark:bg-gray-800/80 p-1 rounded-xl">
-        <button onClick={() => setTab('cases')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium rounded-lg transition-all ${tab === 'cases' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>
-          <FileText className="w-3.5 h-3.5" />Cases
+      <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-lg">
+        <button onClick={() => setTab('cases')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-md transition-all ${tab === 'cases' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}>
+          <FileText className="w-3.5 h-3.5" /> Cases
         </button>
-        <button onClick={() => setTab('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium rounded-lg transition-all ${tab === 'users' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>
-          <Users className="w-3.5 h-3.5" />Staff
+        <button onClick={() => setTab('users')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-md transition-all ${tab === 'users' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}>
+          <Users className="w-3.5 h-3.5" /> Staff
         </button>
       </div>
 
-      {/* Cases Tab */}
       {tab === 'cases' && (
-        <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {cases.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 dark:text-gray-500 text-sm">No cases yet</div>
+            <div className="sm:col-span-2 text-center py-12 text-slate-400 dark:text-slate-500 text-sm">No cases yet</div>
           ) : cases.map(c => (
-            <div key={c.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col gap-2.5">
+            <div key={c.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2.5">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 px-2 py-0.5 rounded-md">{c.species}</span>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500">#{c.id}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-2 py-0.5 rounded">{c.species}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">#{c.id}</span>
                 </div>
                 <select
                   value={c.status}
                   onChange={e => updateStatus(c.id, e.target.value)}
-                  className={`text-xs font-semibold rounded-lg px-2.5 py-1 border cursor-pointer outline-none ${statusStyle[c.status] || ''}`}
+                  className={`text-xs font-medium rounded-md px-2 py-1 border cursor-pointer outline-none ${statusStyle[c.status] || ''}`}
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
                   <option value="resolved">Resolved</option>
                 </select>
               </div>
-              {c.description && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{c.description}</p>}
-              <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500">
+              {c.description && <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">{c.description}</p>}
+              <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.lat.toFixed(4)}, {c.lng.toFixed(4)}</span>
                 <span>{new Date(c.created_at).toLocaleDateString()}</span>
               </div>
@@ -166,25 +164,24 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Users Tab */}
       {tab === 'users' && (
         <div className="flex flex-col gap-2.5">
           {users.map(u => (
-            <div key={u.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 flex items-center justify-between">
+            <div key={u.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${u.role === 'admin' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
-                  {u.role === 'admin' ? <Shield className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold ${u.role === 'admin' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400'}`}>
+                  {u.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{u.username}</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${u.role === 'admin' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>{u.role}</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white">{u.username}</span>
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${u.role === 'admin' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' : 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400'}`}>{u.role}</span>
                   </div>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Joined {new Date(u.created_at).toLocaleDateString()}</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{new Date(u.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
               {u.id !== user?.id && (
-                <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
+                <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
@@ -198,34 +195,34 @@ export default function Admin() {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 onSubmit={handleAddUser}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col gap-3 overflow-hidden"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-3 overflow-hidden"
               >
                 <div className="flex justify-between items-center">
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Create Staff Account</h4>
-                  <button type="button" onClick={() => setShowUserForm(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  <h4 className="font-medium text-slate-900 dark:text-white text-sm">Create staff account</h4>
+                  <button type="button" onClick={() => setShowUserForm(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <input name="username" required placeholder="Username" className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500" />
-                <input name="password" required type="password" placeholder="Password" minLength={4} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500" />
-                <select name="role" required className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                <input name="username" required placeholder="Username" className={inputCls} />
+                <input name="password" required type="password" placeholder="Password" minLength={4} className={inputCls} />
+                <select name="role" required className={inputCls}>
                   <option value="volunteer">Volunteer</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button type="submit" disabled={addingUser} className="w-full bg-red-600 text-white font-medium py-2.5 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50">
-                  {addingUser ? 'Creating...' : 'Create Account'}
+                <button type="submit" disabled={addingUser} className="w-full bg-teal-600 text-white font-medium py-2.5 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 text-sm">
+                  {addingUser ? 'Creating...' : 'Create account'}
                 </button>
               </motion.form>
             )}
           </AnimatePresence>
 
           {!showUserForm && (
-            <button onClick={() => setShowUserForm(true)} className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-dashed border-gray-300 dark:border-gray-700">
-              <UserPlus className="w-4 h-4" /> Add Staff Member
+            <button onClick={() => setShowUserForm(true)} className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 py-2.5 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-dashed border-slate-300 dark:border-slate-700 text-sm">
+              <UserPlus className="w-4 h-4" /> Add staff member
             </button>
           )}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
