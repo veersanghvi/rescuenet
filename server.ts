@@ -100,7 +100,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
 
@@ -318,6 +318,10 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static('dist'));
+    // SPA fallback — serve index.html for client-side routes
+    app.get('*', (_req, res) => {
+      res.sendFile('index.html', { root: 'dist' });
+    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
