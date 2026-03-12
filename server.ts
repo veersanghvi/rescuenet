@@ -65,26 +65,41 @@ if (count === 0) {
   const insertSpecies = db.prepare('INSERT INTO ngo_species (ngo_id, species) VALUES (?, ?)');
   
   const seedNgos = [
-    { name: 'People For Animals', phone: '+91 11 2371 9293', address: '14 Ashoka Road, New Delhi', lat: 28.6280, lng: 77.2197, radius: 50, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
-    { name: 'Friendicoes SECA', phone: '+91 11 2431 5480', address: 'Jangpura, New Delhi', lat: 28.5846, lng: 77.2445, radius: 25, accepting: 1, species: ['dog', 'cat'] },
-    { name: 'Sanjay Gandhi Animal Care Centre', phone: '+91 11 2374 3900', address: 'Raja Garden, New Delhi', lat: 28.6519, lng: 77.1168, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
-    { name: 'Blue Cross of India', phone: '+91 44 2254 0758', address: 'Velachery Road, Guindy, Chennai', lat: 13.0067, lng: 80.2206, radius: 30, accepting: 1, species: ['dog', 'cat'] },
-    { name: 'IDA India', phone: '+91 44 2441 2442', address: 'Besant Nagar, Chennai', lat: 12.9986, lng: 80.2669, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird'] },
-    { name: 'CUPA Bangalore', phone: '+91 80 2557 1024', address: 'Veterinary College Campus, Hebbal, Bangalore', lat: 13.0358, lng: 77.5970, radius: 35, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
-    { name: 'Charlie\'s Animal Rescue Centre', phone: '+91 98450 24935', address: 'Sarjapur Road, Bangalore', lat: 12.9081, lng: 77.6736, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
-    { name: 'The Welfare of Stray Dogs', phone: '+91 22 2655 3812', address: 'Parel, Mumbai', lat: 18.9988, lng: 72.8400, radius: 30, accepting: 1, species: ['dog'] },
-    { name: 'Red Paws Rescue', phone: '+91 90290 60022', address: 'Andheri West, Mumbai', lat: 19.1197, lng: 72.8464, radius: 20, accepting: 1, species: ['dog', 'cat'] },
-    { name: 'Bombay SPCA', phone: '+91 22 2413 6053', address: 'Parel, Mumbai', lat: 19.0033, lng: 72.8426, radius: 35, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
-    { name: 'Animal Aid Unlimited', phone: '+91 294 2490489', address: 'Badi Village, Udaipur', lat: 24.6222, lng: 73.6783, radius: 45, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
-    { name: 'Wildlife SOS', phone: '+91 120 4538015', address: 'Agra-Mathura Road, Agra', lat: 27.3076, lng: 77.8557, radius: 60, accepting: 1, species: ['wildlife', 'bird'] },
-    { name: 'Visakha SPCA', phone: '+91 891 254 6254', address: 'Maddilapalem, Visakhapatnam', lat: 17.7340, lng: 83.3152, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
-    { name: 'Animal Rahat', phone: '+91 233 2321 405', address: 'Sangli, Maharashtra', lat: 16.8547, lng: 74.5646, radius: 40, accepting: 1, species: ['dog', 'wildlife'] },
-    { name: 'PAWS Kolkata', phone: '+91 33 2486 1462', address: 'Tollygunge, Kolkata', lat: 22.4972, lng: 88.3473, radius: 30, accepting: 1, species: ['dog', 'cat', 'bird'] },
-    { name: 'Karuna Society for Animals', phone: '+91 8518 277246', address: 'Puttaparthi, Andhra Pradesh', lat: 14.1650, lng: 77.8115, radius: 35, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
-    { name: 'Help in Suffering', phone: '+91 141 276 0013', address: 'Maharani Farm, Durgapura, Jaipur', lat: 26.8454, lng: 75.8191, radius: 30, accepting: 1, species: ['dog', 'cat'] },
-    { name: 'PFA Dehradun', phone: '+91 135 274 2461', address: 'Vasant Vihar, Dehradun', lat: 30.3165, lng: 78.0322, radius: 25, accepting: 1, species: ['dog', 'cat', 'wildlife'] },
-    { name: 'Jeev Ashram', phone: '+91 522 277 0888', address: 'Chinhat, Lucknow', lat: 26.8905, lng: 81.0245, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
-    { name: 'Krupa Animal Hospital', phone: '+91 79 2646 1182', address: 'Satellite, Ahmedabad', lat: 23.0225, lng: 72.5714, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    // Dog & Cat general rescues
+    { name: 'Helping Hands Animal Welfare Foundation', phone: '088502 85889', address: 'RB2 Central Railway Quarters, Sion West, Mumbai 400022', lat: 19.0440, lng: 72.8620, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Pawpulation Control (Mission Compassion Foundation)', phone: '099874 38980', address: '105, Rebello House, C.T.S Road, Santacruz East, Mumbai 400029', lat: 19.0796, lng: 72.8565, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'HOPE FOUNDATION (House Of Paws Endearment)', phone: '081695 80661', address: 'Shop no 241, Ramabaiwadi, Mulund West, Mumbai 400080', lat: 19.1726, lng: 72.9560, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Gully Stray Care', phone: '093232 63322', address: 'Shop No. 386, Hill No. 4, Azad Nagar, Ghatkopar West, Mumbai 400086', lat: 19.0870, lng: 72.9080, radius: 12, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Animal Rescue & Shelter Foundation', phone: '098202 77824', address: '8-A, PARTH CHS, MMRDA Colony, Andheri East, Mumbai 400615', lat: 19.1197, lng: 72.8710, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Rroaming Paws Foundation', phone: '091751 13013', address: '10-11, RSC Rd Number 10, Charkop, Kandivali West, Mumbai 400067', lat: 19.2050, lng: 72.8400, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Sharanam Animal Care and Rescue Center', phone: '091361 58595', address: 'Koliwada, Thane West, Thane 400615', lat: 19.2183, lng: 72.9781, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Youth Organisation In Defence Of Animals (YODA)', phone: '080 6268 9333', address: 'Chikuwadi Rd, off Marve Road, Malad West, Mumbai 400095', lat: 19.1870, lng: 72.8220, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'Animal Matter To Me (AMTM)', phone: '099207 37737', address: 'CTS 166-167 Ashram, Madh-Marve Rd, Malad West, Mumbai 400061', lat: 19.2010, lng: 72.8120, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'All About Them', phone: '091367 82348', address: '15, Dr Elijah Moses Rd, Worli Naka, Mumbai 400018', lat: 19.0170, lng: 72.8150, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'PawTalk | Animal Communication & Rescue', phone: '081699 47599', address: 'Samarth Nagar, Chunabhatti, Sion, Mumbai 400022', lat: 19.0430, lng: 72.8670, radius: 12, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Apna Home Animal Shelter', phone: '093221 91638', address: 'Taloja, Siddhi Karavale, Maharashtra 410208', lat: 19.0650, lng: 73.1200, radius: 25, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Raksha Animal Welfare Center', phone: '090821 98551', address: 'Unit 29, Laxmi Woollen Mill, Shakti Mills Ln, Worli, Mumbai 400011', lat: 19.0100, lng: 72.8250, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+    { name: 'Freedom Farm (Citizens for Animal Protection)', phone: '093246 10601', address: 'Unnathi Woods Rd, Kasarvadavali, Thane West, Thane 400615', lat: 19.2400, lng: 72.9650, radius: 25, accepting: 1, species: ['dog', 'cat', 'bird', 'wildlife'] },
+    { name: 'The Welfare Of Stray Dogs', phone: '089760 22838', address: 'Tokershi Jivraj Rd, Sewri West, Mumbai 400015', lat: 19.0020, lng: 72.8580, radius: 20, accepting: 1, species: ['dog'] },
+    { name: 'IDA India - Deonar', phone: '093200 56581', address: 'Near Deonar Colony, Baiganwadi, Deonar, Mumbai 400043', lat: 19.0560, lng: 72.9100, radius: 20, accepting: 1, species: ['dog', 'cat', 'bird'] },
+    { name: 'Dr. Deepa Katyal\'s AWRC', phone: '098197 42557', address: 'Bungalow 29, NB Patil Marg, Chembur, Mumbai 400071', lat: 19.0620, lng: 72.8980, radius: 15, accepting: 1, species: ['dog', 'cat'] },
+
+    // Cat-specific
+    { name: 'Cat Boarding - MeoowLove', phone: '086928 09106', address: 'Sarova Building B-2, Thakur Village, Kandivali East, Mumbai 400101', lat: 19.2070, lng: 72.8600, radius: 15, accepting: 1, species: ['cat'] },
+    { name: 'LiFelines Kittens', phone: '098347 91733', address: 'Behnur CHSL, Lokhandwala Circle, Andheri West, Mumbai 400053', lat: 19.1370, lng: 72.8290, radius: 15, accepting: 1, species: ['cat'] },
+
+    // Bird-specific
+    { name: 'Save Birds Free Treatment Centre (Malad)', phone: '084518 99899', address: 'Opposite RTO Office Subway, Malad West, Mumbai 400064', lat: 19.1890, lng: 72.8340, radius: 20, accepting: 1, species: ['bird'] },
+    { name: 'MAA (Medical Aid For Birds)', phone: '098205 23802', address: 'Shop 9, Emerald Shopping Center, Andheri East, Mumbai 400069', lat: 19.1150, lng: 72.8700, radius: 15, accepting: 1, species: ['bird'] },
+    { name: 'Save Birds Kandivali East', phone: '084518 99899', address: 'Damodar Wadi Main Gate, Kandivali East, Mumbai 400101', lat: 19.2070, lng: 72.8620, radius: 15, accepting: 1, species: ['bird'] },
+    { name: 'HELP Animals & Birds Hospital', phone: '092233 33338', address: '11, Asok House, Nandalal Jani Rd, Masjid Bandar, Mumbai 400009', lat: 18.9680, lng: 72.8440, radius: 15, accepting: 1, species: ['bird', 'dog', 'cat'] },
+
+    // Wildlife & snake rescue
+    { name: 'RAWW (Resqink Association For Wildlife Welfare)', phone: '076666 80202', address: 'P&T Staff Colony, Mulund West, Mumbai 400080', lat: 19.1750, lng: 72.9500, radius: 30, accepting: 1, species: ['wildlife', 'bird'] },
+    { name: 'Wildlife Welfare Association (WWA)', phone: '097573 22901', address: 'Koknipada, Manpada, Thane West, Thane 400610', lat: 19.2000, lng: 72.9700, radius: 25, accepting: 1, species: ['wildlife'] },
+    { name: 'Snake Catcher Ashish', phone: '093247 92692', address: 'Room 103, Sangharsh Nagar, Chandivali, Powai, Mumbai 400072', lat: 19.1176, lng: 72.9060, radius: 20, accepting: 1, species: ['wildlife', 'bird'] },
+    { name: 'Wildlife Rescuer / Snake Friend', phone: '074003 60576', address: 'Tata Nagar, Bhandup East, Mumbai 400042', lat: 19.1530, lng: 72.9380, radius: 20, accepting: 1, species: ['wildlife'] },
+    { name: 'Animals Rescue & Rehab Wildlife Organization', phone: '095522 39243', address: 'Shop 69696, Shivaji Nagar Rd, Ambernath East, Maharashtra 421501', lat: 19.1860, lng: 73.1890, radius: 30, accepting: 1, species: ['wildlife'] },
   ];
 
   const insertMany = db.transaction((ngos) => {
