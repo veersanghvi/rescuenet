@@ -1,0 +1,7 @@
+{
+  "name": "RescueNet",
+  "description": "Emergency animal rescue platform to find nearest NGOs and report cases.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
