@@ -126,6 +126,9 @@ export default function Report() {
           <Link to={`/track?token=${submittedToken}`} className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium py-2.5 rounded-lg text-center text-sm hover:opacity-90 transition-opacity">
             Track My Case
           </Link>
+          <Link to="/until-help" className="w-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-medium py-2.5 rounded-lg text-center text-sm hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors">
+            Read what to do until help arrives
+          </Link>
           <Link to="/" className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium py-2.5 rounded-lg text-center text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
             Back to Home
           </Link>

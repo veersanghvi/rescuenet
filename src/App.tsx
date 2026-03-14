@@ -11,6 +11,8 @@ import Volunteer from './pages/Volunteer';
 import Login from './pages/Login';
 import TrackCase from './pages/TrackCase';
 import NotFound from './pages/NotFound';
+import UntilHelp from './pages/UntilHelp';
+import LostFound from './pages/LostFound';
 import Layout from './components/Layout';
 import { ToastProvider } from './components/Toast';
 import { ThemeProvider } from './components/Theme';
@@ -42,6 +44,8 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="report" element={<Report />} />
             <Route path="track" element={<TrackCase />} />
+            <Route path="until-help" element={<UntilHelp />} />
+            <Route path="lost-found" element={<LostFound />} />
             <Route path="login" element={<LoginRoute />} />
             <Route path="admin" element={<ProtectedRoute roles={['admin']}><Admin /></ProtectedRoute>} />
             <Route path="volunteer" element={<ProtectedRoute roles={['admin', 'volunteer']}><Volunteer /></ProtectedRoute>} />

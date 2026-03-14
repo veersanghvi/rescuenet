@@ -1,6 +1,6 @@
 {
-  "name": "RescueNet",
-  "description": "Emergency animal rescue platform to find nearest NGOs and report cases.",
+  "name": "rescuenear.me",
+  "description": "Emergency animal rescue platform with case tracking, lost-and-found board, and first-aid guidance.",
   "requestFramePermissions": [
     "geolocation"
   ]

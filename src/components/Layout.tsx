@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Search, Moon, Sun, LogIn, LogOut } from 'lucide-react';
+import { Search, Moon, Sun, LogIn, LogOut, HeartHandshake, LifeBuoy } from 'lucide-react';
 import { useTheme } from './Theme';
 import { useAuth } from './Auth';
 
@@ -35,6 +35,8 @@ export default function Layout() {
           <nav className="flex items-center gap-1">
             <div className="hidden sm:flex items-center gap-1 mr-2">
               {navLink('/track', 'Track')}
+              {navLink('/until-help', 'Until Help')}
+              {navLink('/lost-found', 'Lost & Found')}
               {user && user.role === 'admin' && navLink('/admin', 'Admin')}
               {user && navLink('/volunteer', 'Volunteer')}
             </div>
@@ -44,6 +46,18 @@ export default function Layout() {
                 className={`p-2 rounded-lg transition-colors ${location.pathname === '/track' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
               >
                 <Search className="w-4 h-4" />
+              </Link>
+              <Link 
+                to="/until-help" 
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/until-help' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              >
+                <LifeBuoy className="w-4 h-4" />
+              </Link>
+              <Link 
+                to="/lost-found" 
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/lost-found' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              >
+                <HeartHandshake className="w-4 h-4" />
               </Link>
             </div>
             <button

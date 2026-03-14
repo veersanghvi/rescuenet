@@ -4,11 +4,21 @@ import Database from 'better-sqlite3';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import crypto from 'crypto';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 dotenv.config({ path: '.env.local' });
 
-const db = new Database('rescue.db');
+const defaultDbPath = process.env.NODE_ENV === 'production' ? '/var/data/rescue.db' : 'rescue.db';
+const dbPath = process.env.DB_PATH || defaultDbPath;
+const dbDir = path.dirname(dbPath);
+if (dbDir && dbDir !== '.') {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new Database(dbPath);
 db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
 
 // Initialize DB (only creates if not exists — never drops)
 db.exec(`
@@ -64,6 +74,20 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS lost_found_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_type TEXT NOT NULL CHECK(report_type IN ('lost', 'found')),
+    species TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    area TEXT NOT NULL,
+    last_seen_at TEXT,
+    contact_name TEXT NOT NULL,
+    contact_phone TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'resolved')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Add reporter_token column if missing (migration for existing DBs)
@@ -89,6 +113,84 @@ function verifyPassword(password: string, stored: string): boolean {
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
+
+const FIRST_AID_GUIDES: Record<string, { title: string; urgent: string[]; avoid: string[]; supplies: string[] }> = {
+  dog: {
+    title: 'Injured Dog',
+    urgent: [
+      'Keep distance if the dog is frightened; use a cloth as a visual barrier.',
+      'Move traffic away and create a quiet perimeter around the animal.',
+      'If bleeding, apply gentle pressure with clean cloth for 5 to 10 minutes.',
+      'Offer water only if the dog is alert and can swallow normally.'
+    ],
+    avoid: [
+      'Do not force food or medicines.',
+      'Do not lift by the legs or neck.',
+      'Do not crowd the animal with multiple people.'
+    ],
+    supplies: ['Clean cloth or gauze', 'Bottle of water', 'Cardboard box or blanket', 'Phone torch at night']
+  },
+  cat: {
+    title: 'Injured Cat',
+    urgent: [
+      'Approach slowly and speak softly to reduce panic.',
+      'Use a towel to wrap and stabilize before moving.',
+      'Keep the cat warm in a ventilated box.',
+      'Share exact lane/building landmark with rescuers.'
+    ],
+    avoid: [
+      'Do not chase a hiding cat into unsafe areas.',
+      'Do not handle with bare hands if aggressive.',
+      'Do not keep in direct heat or sun.'
+    ],
+    supplies: ['Large towel', 'Ventilated carton', 'Drinking water', 'Flashlight']
+  },
+  bird: {
+    title: 'Injured Bird',
+    urgent: [
+      'Place the bird in a dark, quiet box with air holes.',
+      'Keep handling time minimal to reduce stress.',
+      'If wing appears fractured, restrict movement and wait for trained support.',
+      'Note nearby wires, fans, or glass risks for responders.'
+    ],
+    avoid: [
+      'Do not feed milk or bread.',
+      'Do not pour water directly into the beak.',
+      'Do not release a stunned bird immediately.'
+    ],
+    supplies: ['Small box with holes', 'Soft cloth', 'Safe corner indoors', 'Responder contact ready']
+  },
+  wildlife: {
+    title: 'Wildlife Emergency',
+    urgent: [
+      'Maintain maximum distance and keep onlookers away.',
+      'Secure pets and children immediately.',
+      'Track location from a safe point until experts arrive.',
+      'Share photos only if it is safe to take them from afar.'
+    ],
+    avoid: [
+      'Do not attempt rescue without trained handlers.',
+      'Do not provoke, corner, or trap the animal.',
+      'Do not use sticks or loud sounds.'
+    ],
+    supplies: ['Safe distance marker', 'Phone camera zoom', 'Area isolation support', 'Local wildlife helpline']
+  },
+  other: {
+    title: 'General Rescue First Steps',
+    urgent: [
+      'Prioritize scene safety for both people and animal.',
+      'Limit noise and movement around the animal.',
+      'Document species, condition, and exact location.',
+      'Contact nearest rescue service with clear landmarks.'
+    ],
+    avoid: [
+      'Do not crowd the scene.',
+      'Do not attempt risky medical treatment.',
+      'Do not delay contacting professionals.'
+    ],
+    supplies: ['Clean cloth', 'Water', 'Location pin', 'Torch at night']
+  }
+};
 
 // Seed default admin (admin / admin123)
 const adminExists = db.prepare('SELECT COUNT(*) as c FROM users WHERE role = ?').get('admin') as { c: number };
@@ -430,6 +532,97 @@ async function startServer() {
     }
   });
 
+  // --- First-aid guidance ---
+  app.get('/api/first-aid', (req, res) => {
+    const species = String(req.query.species || 'other').toLowerCase();
+    const safeSpecies = ['dog', 'cat', 'bird', 'wildlife'].includes(species) ? species : 'other';
+    res.json({ species: safeSpecies, guide: FIRST_AID_GUIDES[safeSpecies] });
+  });
+
+  // --- Lost & Found ---
+  app.get('/api/lost-found', (req, res) => {
+    const { status, type, q } = req.query;
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (status && ['open', 'resolved'].includes(String(status))) {
+      conditions.push('status = ?');
+      params.push(status);
+    }
+
+    if (type && ['lost', 'found'].includes(String(type))) {
+      conditions.push('report_type = ?');
+      params.push(type);
+    }
+
+    if (q) {
+      const term = `%${String(q).trim()}%`;
+      conditions.push('(title LIKE ? OR area LIKE ? OR species LIKE ?)');
+      params.push(term, term, term);
+    }
+
+    let sql = 'SELECT * FROM lost_found_posts';
+    if (conditions.length > 0) {
+      sql += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    sql += ' ORDER BY created_at DESC';
+
+    const posts = db.prepare(sql).all(...params);
+    res.json(posts);
+  });
+
+  app.post('/api/lost-found', (req, res) => {
+    const {
+      report_type,
+      species,
+      title,
+      description,
+      area,
+      last_seen_at,
+      contact_name,
+      contact_phone
+    } = req.body;
+
+    if (!['lost', 'found'].includes(report_type)) {
+      return res.status(400).json({ error: 'report_type must be lost or found' });
+    }
+    if (!species || !title || !area || !contact_name || !contact_phone) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const info = db.prepare(`
+      INSERT INTO lost_found_posts (
+        report_type, species, title, description, area, last_seen_at, contact_name, contact_phone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      report_type,
+      String(species).toLowerCase(),
+      String(title).trim(),
+      description ? String(description).trim() : null,
+      String(area).trim(),
+      last_seen_at ? String(last_seen_at) : null,
+      String(contact_name).trim(),
+      String(contact_phone).trim()
+    );
+
+    res.status(201).json({ id: info.lastInsertRowid });
+  });
+
+  app.patch('/api/lost-found/:id/status', requireRole('admin', 'volunteer'), (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['open', 'resolved'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const result = db.prepare('UPDATE lost_found_posts SET status = ? WHERE id = ?').run(status, id);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json({ success: true });
+  });
+
   // --- Gemini Search Proxy (keeps API key server-side) ---
   app.post('/api/search', async (req, res) => {
     const { query, lat, lng } = req.body;
@@ -488,6 +681,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`DB path: ${dbPath}`);
   });
 }
 

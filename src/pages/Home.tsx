@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Phone, Search, Navigation, MapPin, Plus } from 'lucide-react';
+import { Phone, Search, Navigation, MapPin, Plus, LifeBuoy, HeartHandshake } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 
@@ -80,6 +80,29 @@ export default function Home() {
         <p className="text-slate-500 dark:text-slate-400 mt-1.5 text-sm sm:text-base">
           {ngos.length > 0 ? `${ngos.length} verified` : 'Verified'} rescue organizations across Mumbai
         </p>
+      </section>
+
+      <section className="grid sm:grid-cols-2 gap-3">
+        <Link
+          to="/until-help"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white text-sm font-semibold">
+            <LifeBuoy className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            What to do until help arrives
+          </div>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Immediate steps to keep you and the animal safe.</p>
+        </Link>
+        <Link
+          to="/lost-found"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white text-sm font-semibold">
+            <HeartHandshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            Lost & found animals board
+          </div>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Post sightings and reunite animals faster.</p>
+        </Link>
       </section>
 
       <section className="flex flex-col gap-3">
