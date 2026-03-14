@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import crypto from 'crypto';
+import multer from 'multer';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -24,6 +25,31 @@ if (dbDir && dbDir !== '.') {
 const db = new Database(dbPath);
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
+
+const uploadDir = path.join(process.cwd(), 'uploads');
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (err) {
+  console.warn(`Could not create uploads directory ${uploadDir}:`, (err as Error).message);
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const safeExt = path.extname(file.originalname || '').toLowerCase();
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${safeExt}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('Only image uploads are allowed'));
+  }
+});
 
 // Initialize DB (only creates if not exists — never drops)
 db.exec(`
@@ -86,6 +112,7 @@ db.exec(`
     species TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
+    photo_url TEXT,
     area TEXT NOT NULL,
     last_seen_at TEXT,
     contact_name TEXT NOT NULL,
@@ -98,6 +125,12 @@ db.exec(`
 // Add reporter_token column if missing (migration for existing DBs)
 try {
   db.exec(`ALTER TABLE cases ADD COLUMN reporter_token TEXT`);
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec(`ALTER TABLE lost_found_posts ADD COLUMN photo_url TEXT`);
 } catch {
   // Column already exists, ignore
 }
@@ -279,6 +312,7 @@ async function startServer() {
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
+  app.use('/uploads', express.static(uploadDir));
 
   // Auth middleware — extracts user from session token
   function getUser(req: express.Request): { id: number; username: string; role: string } | null {
@@ -576,7 +610,15 @@ async function startServer() {
     res.json(posts);
   });
 
-  app.post('/api/lost-found', (req, res) => {
+  app.post('/api/lost-found', (req, res, next) => {
+    upload.single('photo')(req, res, (err) => {
+      if (!err) {
+        next();
+        return;
+      }
+      res.status(400).json({ error: err.message || 'Photo upload failed' });
+    });
+  }, (req, res) => {
     const {
       report_type,
       species,
@@ -587,6 +629,7 @@ async function startServer() {
       contact_name,
       contact_phone
     } = req.body;
+    const photo_url = (req as any).file ? `/uploads/${(req as any).file.filename}` : null;
 
     if (!['lost', 'found'].includes(report_type)) {
       return res.status(400).json({ error: 'report_type must be lost or found' });
@@ -597,13 +640,14 @@ async function startServer() {
 
     const info = db.prepare(`
       INSERT INTO lost_found_posts (
-        report_type, species, title, description, area, last_seen_at, contact_name, contact_phone
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        report_type, species, title, description, photo_url, area, last_seen_at, contact_name, contact_phone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       report_type,
       String(species).toLowerCase(),
       String(title).trim(),
       description ? String(description).trim() : null,
+      photo_url,
       String(area).trim(),
       last_seen_at ? String(last_seen_at) : null,
       String(contact_name).trim(),

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Phone, Search, Navigation, MapPin, Plus, LifeBuoy, HeartHandshake } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 
@@ -72,17 +73,17 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-24">
-      <section className="pt-1">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 pb-24">
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="pt-1">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
           Find animal rescue help nearby
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1.5 text-sm sm:text-base">
           {ngos.length > 0 ? `${ngos.length} verified` : 'Verified'} rescue organizations across Mumbai
         </p>
-      </section>
+      </motion.section>
 
-      <section className="grid sm:grid-cols-2 gap-3">
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid sm:grid-cols-2 gap-3">
         <Link
           to="/until-help"
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
@@ -103,9 +104,9 @@ export default function Home() {
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Post sightings and reunite animals faster.</p>
         </Link>
-      </section>
+      </motion.section>
 
-      <section className="flex flex-col gap-3">
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="flex flex-col gap-3">
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -160,7 +161,7 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+      </motion.section>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -195,9 +196,12 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {ngos.map((ngo) => (
-              <div
+            {ngos.map((ngo, index) => (
+              <motion.div
                 key={ngo.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(index * 0.03, 0.2) }}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
                 <div className="flex justify-between items-start gap-2">
@@ -217,7 +221,7 @@ export default function Home() {
 
                 <div className="flex flex-wrap gap-1">
                   {ngo.species?.map((s: string) => (
-                    <span key={s} className="text-[10px] uppercase tracking-wider font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded">
+                    <span key={s} className="text-[10px] uppercase tracking-wider font-medium bg-[#E9F6F4] text-[#2A9D8F] px-1.5 py-0.5 rounded">
                       {s}
                     </span>
                   ))}
@@ -225,12 +229,12 @@ export default function Home() {
 
                 <a
                   href={`tel:${ngo.phone}`}
-                  className="flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 bg-[#2A9D8F] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#24877b] transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5" />
                   {ngo.phone}
                 </a>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
@@ -245,6 +249,6 @@ export default function Home() {
           Report a rescue
         </Link>
       </div>
-    </div>
+    </motion.div>
   );
 }

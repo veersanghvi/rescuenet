@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Shield, Ban, Package } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 
@@ -49,8 +50,8 @@ export default function UntilHelp() {
   }, [species]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl w-full mx-auto">
-      <div className="flex items-center gap-3">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 max-w-3xl w-full mx-auto">
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="flex items-center gap-3">
         <Link to="/" className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -58,14 +59,14 @@ export default function UntilHelp() {
           <h1 className="font-bold text-xl text-[#1F2937] dark:text-white">Until help arrives</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">Calm, practical steps for the first 10 minutes</p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-[#FFF3E8] border border-[#F4A261]/45 rounded-lg p-3.5 text-[#8A4B12] text-sm flex items-start gap-2">
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="bg-[#FFF3E8] border border-[#F4A261]/45 rounded-lg p-3.5 text-[#8A4B12] text-sm flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
         Prioritize your safety first. If the animal is aggressive or wildlife is involved, keep distance and wait for trained responders.
-      </div>
+      </motion.div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2">
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2">
         <label htmlFor="species" className="text-sm font-medium text-slate-700 dark:text-slate-300">Animal type</label>
         <select
           id="species"
@@ -77,7 +78,7 @@ export default function UntilHelp() {
             <option key={option.value} value={option.value}>{option.label}</option>
           ))}
         </select>
-      </div>
+      </motion.div>
 
       {loading ? (
         <div className="grid sm:grid-cols-3 gap-3">
@@ -87,7 +88,7 @@ export default function UntilHelp() {
         </div>
       ) : guide ? (
         <>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="grid sm:grid-cols-3 gap-3">
             <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#2A9D8F]" />
@@ -117,14 +118,14 @@ export default function UntilHelp() {
                 {guide.supplies.map((item) => <li key={item}>• {item}</li>)}
               </ul>
             </section>
-          </div>
+          </motion.div>
 
-          <div className="bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-sm text-slate-700 dark:text-slate-300">
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-sm text-slate-700 dark:text-slate-300">
             If possible, submit a rescue report immediately so responders can locate you faster.
             <Link to="/report" className="ml-1 text-[#E63946] font-semibold hover:underline">Open report form</Link>
-          </div>
+          </motion.div>
         </>
       ) : null}
-    </div>
+    </motion.div>
   );
 }

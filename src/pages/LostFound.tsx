@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Search, Phone, HandHeart, Plus } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import { authHeaders, useAuth } from '../components/Auth';
@@ -12,6 +13,7 @@ interface LostFoundPost {
   species: string;
   title: string;
   description: string | null;
+  photo_url: string | null;
   area: string;
   last_seen_at: string | null;
   contact_name: string;
@@ -30,6 +32,7 @@ export default function LostFound() {
   const [type, setType] = useState<'all' | ReportType>('all');
   const [status, setStatus] = useState<'open' | 'resolved'>('open');
   const [submitting, setSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const loadPosts = async (overrides?: { q?: string; type?: 'all' | ReportType; status?: 'open' | 'resolved' }) => {
     setLoading(true);
@@ -68,21 +71,12 @@ export default function LostFound() {
     try {
       const res = await fetch('/api/lost-found', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report_type: fd.get('report_type'),
-          species: fd.get('species'),
-          title: fd.get('title'),
-          description: fd.get('description'),
-          area: fd.get('area'),
-          last_seen_at: fd.get('last_seen_at'),
-          contact_name: fd.get('contact_name'),
-          contact_phone: fd.get('contact_phone'),
-        }),
+        body: fd,
       });
       if (!res.ok) throw new Error();
       toast('Posted successfully', 'success');
       (e.currentTarget as HTMLFormElement).reset();
+      setPhotoPreview(null);
       loadPosts();
     } catch {
       toast('Failed to post', 'error');
@@ -107,7 +101,7 @@ export default function LostFound() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Link to="/" className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -150,8 +144,16 @@ export default function LostFound() {
               No posts in this view yet.
             </div>
           ) : (
-            posts.map((post) => (
-              <article key={post.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 flex flex-col gap-2">
+            <AnimatePresence>
+              {posts.map((post) => (
+              <motion.article
+                key={post.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 flex flex-col gap-2"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-medium ${post.report_type === 'lost' ? 'bg-[#FEECEE] text-[#E63946]' : 'bg-[#E9F6F4] text-[#2A9D8F]'}`}>
@@ -168,6 +170,9 @@ export default function LostFound() {
 
                 <h2 className="text-sm font-semibold text-[#1F2937] dark:text-white">{post.title}</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{post.area} {post.last_seen_at ? `• ${post.last_seen_at}` : ''}</p>
+                {post.photo_url ? (
+                  <img src={post.photo_url} alt={post.title} className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
+                ) : null}
                 {post.description ? <p className="text-sm text-slate-600 dark:text-slate-300">{post.description}</p> : null}
 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -183,12 +188,13 @@ export default function LostFound() {
                     </button>
                   )}
                 </div>
-              </article>
-            ))
+              </motion.article>
+            ))}
+            </AnimatePresence>
           )}
         </div>
 
-        <form onSubmit={handleCreate} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2.5 sticky top-20">
+        <motion.form initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleCreate} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col gap-2.5 sticky top-20">
           <h3 className="text-sm font-semibold text-[#1F2937] dark:text-white flex items-center gap-2">
             <Plus className="w-4 h-4 text-[#2A9D8F]" />
             Post lost/found report
@@ -203,14 +209,37 @@ export default function LostFound() {
           <input name="last_seen_at" placeholder="Last seen (optional)" className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/25 focus:border-[#2A9D8F]" />
           <input name="contact_name" required placeholder="Contact name" className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/25 focus:border-[#2A9D8F]" />
           <input name="contact_phone" required placeholder="Contact phone" className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/25 focus:border-[#2A9D8F]" />
+          <input
+            name="photo"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) {
+                setPhotoPreview(null);
+                return;
+              }
+              if (file.size > 5 * 1024 * 1024) {
+                toast('Photo must be under 5MB', 'error');
+                e.currentTarget.value = '';
+                setPhotoPreview(null);
+                return;
+              }
+              setPhotoPreview(URL.createObjectURL(file));
+            }}
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
+          />
+          {photoPreview ? (
+            <img src={photoPreview} alt="Upload preview" className="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+          ) : null}
           <textarea name="description" rows={3} placeholder="Description" className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/25 focus:border-[#2A9D8F]" />
 
           <button disabled={submitting} type="submit" className="bg-[#E63946] hover:bg-[#D62F3D] disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
             <HandHeart className="w-4 h-4" />
             {submitting ? 'Posting...' : 'Publish report'}
           </button>
-        </form>
+        </motion.form>
       </section>
-    </div>
+    </motion.div>
   );
 }
