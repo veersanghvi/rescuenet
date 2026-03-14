@@ -26,11 +26,14 @@ export default function Layout() {
   
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-slate-950 text-[#1F2937] dark:text-slate-100 font-sans flex flex-col">
-      <header className="bg-white border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
+      <header className="bg-white dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-1.5">
-            <span className="text-lg font-bold tracking-tight text-[#1F2937] dark:text-white">rescue</span>
-            <span className="text-lg font-bold tracking-tight text-[#E63946]">near</span>
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/rescuenear-mark.svg" alt="rescuenear" className="h-8 w-8" />
+            <div className="leading-none">
+              <div className="text-sm font-bold tracking-tight text-[#1F2937] dark:text-slate-100">rescue</div>
+              <div className="text-sm font-bold tracking-tight text-[#2A9D8F]">near.me</div>
+            </div>
           </Link>
           <nav className="flex items-center gap-1">
             <div className="hidden sm:flex items-center gap-1 mr-2">

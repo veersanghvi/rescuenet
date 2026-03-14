@@ -108,6 +108,10 @@ export default function TrackCase() {
               <p className="text-sm text-slate-700 dark:text-slate-300">{caseData.description}</p>
             )}
 
+            {caseData.photo_url && (
+              <img src={caseData.photo_url} alt="Reported animal" className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
+            )}
+
             <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               {caseData.lat.toFixed(4)}, {caseData.lng.toFixed(4)}

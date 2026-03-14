@@ -10,6 +10,7 @@ const SPECIES_OPTIONS = ['dog', 'cat', 'bird', 'wildlife'];
 export default function Volunteer() {
   const { toast } = useToast();
   const { user, token } = useAuth();
+  const canManageNgos = user?.role === 'admin';
   const [ngos, setNgos] = useState<any[]>([]);
   const [cases, setCases] = useState<any[]>([]);
   const [tab, setTab] = useState<'ngos' | 'cases'>('ngos');
@@ -129,13 +130,15 @@ export default function Volunteer() {
                   </div>
                 )}
               </div>
-              <button onClick={() => handleDeleteNgo(ngo.id)} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors shrink-0">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {canManageNgos && (
+                <button onClick={() => handleDeleteNgo(ngo.id)} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ))}
 
-          <AnimatePresence>
+          {canManageNgos && <AnimatePresence>
             {showAddForm && (
               <motion.form
                 initial={{ opacity: 0, height: 0 }}
@@ -174,12 +177,18 @@ export default function Volunteer() {
                 </button>
               </motion.form>
             )}
-          </AnimatePresence>
+          </AnimatePresence>}
 
-          {!showAddForm && (
+          {canManageNgos && !showAddForm && (
             <button onClick={() => setShowAddForm(true)} className="sm:col-span-2 flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 py-2.5 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-dashed border-slate-300 dark:border-slate-700 text-sm">
               <Plus className="w-4 h-4" /> Add NGO
             </button>
+          )}
+
+          {!canManageNgos && (
+            <div className="sm:col-span-2 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs text-slate-500 dark:text-slate-400">
+              NGO records are managed by admins only.
+            </div>
           )}
         </div>
       )}
@@ -206,6 +215,7 @@ export default function Volunteer() {
                 </select>
               </div>
               {c.description && <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">{c.description}</p>}
+              {c.photo_url && <img src={c.photo_url} alt={`Case ${c.id}`} className="w-full h-36 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />}
               <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.lat.toFixed(4)}, {c.lng.toFixed(4)}</span>
                 <span>{new Date(c.created_at).toLocaleDateString()}</span>

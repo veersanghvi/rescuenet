@@ -73,13 +73,16 @@ export default function LostFound() {
         method: 'POST',
         body: fd,
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to post');
+      }
       toast('Posted successfully', 'success');
       (e.currentTarget as HTMLFormElement).reset();
       setPhotoPreview(null);
       loadPosts();
-    } catch {
-      toast('Failed to post', 'error');
+    } catch (err: any) {
+      toast(err.message || 'Failed to post', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -219,8 +222,8 @@ export default function LostFound() {
                 setPhotoPreview(null);
                 return;
               }
-              if (file.size > 5 * 1024 * 1024) {
-                toast('Photo must be under 5MB', 'error');
+              if (file.size > 500 * 1024) {
+                toast('Image must be 500KB or smaller', 'error');
                 e.currentTarget.value = '';
                 setPhotoPreview(null);
                 return;
@@ -229,6 +232,7 @@ export default function LostFound() {
             }}
             className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
           />
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Photo is optional. Max size: 500KB.</p>
           {photoPreview ? (
             <img src={photoPreview} alt="Upload preview" className="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
           ) : null}

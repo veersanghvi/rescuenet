@@ -28,9 +28,12 @@ export default function Login() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
       <div className="flex flex-col items-center gap-2">
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">rescue</span>
-          <span className="text-2xl font-bold tracking-tight text-teal-600 dark:text-teal-400">near</span>
+        <div className="flex items-center gap-2 mb-2">
+          <img src="/rescuenear-mark.svg" alt="rescuenear" className="h-9 w-9" />
+          <div className="leading-none text-left">
+            <div className="text-sm font-bold tracking-tight text-[#1F2937] dark:text-slate-100">rescue</div>
+            <div className="text-sm font-bold tracking-tight text-[#2A9D8F]">near.me</div>
+          </div>
         </div>
         <div className="text-center">
           <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Staff login</h1>
@@ -47,7 +50,7 @@ export default function Login() {
             onChange={e => setUsername(e.target.value)}
             placeholder="Enter username"
             autoComplete="username"
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
           />
         </div>
 
@@ -60,7 +63,7 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               placeholder="Enter password"
               autoComplete="current-password"
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
             />
             <button
               type="button"

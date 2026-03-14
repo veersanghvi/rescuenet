@@ -25,6 +25,7 @@ This app uses SQLite and supports configurable DB paths.
 
 1. Create a persistent disk in Render and mount it at `/var/data`
 2. Set environment variable `DB_PATH=/var/data/rescue.db`
+3. Set environment variable `UPLOAD_DIR=/var/data/uploads`
 3. Redeploy your Render service
 
 Without a mounted disk, data resets when the instance is recycled.
@@ -33,4 +34,6 @@ Without a mounted disk, data resets when the instance is recycled.
 
 - `Until Help Arrives` page with practical species-specific first-aid steps
 - `Lost & Found` board for community reunion reports
+- Optional photo uploads for rescue cases and lost/found posts (500KB max)
+- NGO create/delete is restricted to admin users
 - SEO assets: metadata, `robots.txt`, and `sitemap.xml`

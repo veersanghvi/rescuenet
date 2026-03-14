@@ -6,11 +6,23 @@ import { GoogleGenAI } from '@google/genai';
 import crypto from 'crypto';
 import multer from 'multer';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 dotenv.config({ path: '.env.local' });
 
-const dbPath = process.env.DB_PATH || 'rescue.db';
+function canWriteDir(dirPath: string): boolean {
+  try {
+    fs.accessSync(dirPath, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const preferredPersistDir = '/var/data';
+const autoPersistentDbPath = canWriteDir(preferredPersistDir) ? path.join(preferredPersistDir, 'rescue.db') : 'rescue.db';
+const dbPath = process.env.DB_PATH || autoPersistentDbPath;
 const dbDir = path.dirname(dbPath);
 if (dbDir && dbDir !== '.') {
   try {
@@ -26,7 +38,10 @@ const db = new Database(dbPath);
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
 
-const uploadDir = path.join(process.cwd(), 'uploads');
+const defaultUploadDir = canWriteDir(preferredPersistDir)
+  ? path.join(preferredPersistDir, 'uploads')
+  : path.join(os.tmpdir(), 'rescuenear-uploads');
+const uploadDir = process.env.UPLOAD_DIR || defaultUploadDir;
 try {
   fs.mkdirSync(uploadDir, { recursive: true });
 } catch (err) {
@@ -41,7 +56,7 @@ const upload = multer({
       cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${safeExt}`);
     }
   }),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 500 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -90,6 +105,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     species TEXT NOT NULL,
     description TEXT,
+    photo_url TEXT,
     lat REAL NOT NULL,
     lng REAL NOT NULL,
     status TEXT DEFAULT 'pending',
@@ -125,6 +141,12 @@ db.exec(`
 // Add reporter_token column if missing (migration for existing DBs)
 try {
   db.exec(`ALTER TABLE cases ADD COLUMN reporter_token TEXT`);
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec(`ALTER TABLE cases ADD COLUMN photo_url TEXT`);
 } catch {
   // Column already exists, ignore
 }
@@ -314,6 +336,25 @@ async function startServer() {
   app.use(express.json());
   app.use('/uploads', express.static(uploadDir));
 
+  const uploadImageIfPresent: express.RequestHandler = (req, res, next) => {
+    if (!req.is('multipart/form-data')) {
+      next();
+      return;
+    }
+    upload.single('photo')(req, res, (err) => {
+      if (!err) {
+        next();
+        return;
+      }
+      const code = (err as any)?.code;
+      if (code === 'LIMIT_FILE_SIZE') {
+        res.status(400).json({ error: 'Image must be 500KB or smaller' });
+        return;
+      }
+      res.status(400).json({ error: (err as any).message || 'Photo upload failed' });
+    });
+  };
+
   // Auth middleware — extracts user from session token
   function getUser(req: express.Request): { id: number; username: string; role: string } | null {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -453,8 +494,8 @@ async function startServer() {
     res.json(ngos);
   });
 
-  // --- NGO CRUD (volunteer or admin) ---
-  app.post('/api/ngos', requireRole('admin', 'volunteer'), (req, res) => {
+  // --- NGO CRUD (admin only) ---
+  app.post('/api/ngos', requireRole('admin'), (req, res) => {
     const { name, phone, address, lat, lng, coverage_radius, species } = req.body;
 
     if (!name || !phone || !address || lat === undefined || lng === undefined) {
@@ -482,7 +523,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/ngos/:id', requireRole('admin', 'volunteer'), (req, res) => {
+  app.delete('/api/ngos/:id', requireRole('admin'), (req, res) => {
     const { id } = req.params;
     const result = db.prepare('DELETE FROM ngos WHERE id = ?').run(id);
     if (result.changes === 0) {
@@ -492,21 +533,24 @@ async function startServer() {
   });
 
   // --- Cases ---
-  app.post('/api/cases', (req, res) => {
-    const { species, description, lat, lng } = req.body;
+  app.post('/api/cases', uploadImageIfPresent, (req, res) => {
+    const { species, description } = req.body;
+    const lat = Number(req.body.lat);
+    const lng = Number(req.body.lng);
+    const photo_url = (req as any).file ? `/uploads/${(req as any).file.filename}` : null;
     
-    if (!species || lat === undefined || lng === undefined) {
+    if (!species || Number.isNaN(lat) || Number.isNaN(lng)) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Generate a simple tracking token
     const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 
-    const insertCase = db.prepare('INSERT INTO cases (species, description, lat, lng, reporter_token) VALUES (?, ?, ?, ?, ?)');
+    const insertCase = db.prepare('INSERT INTO cases (species, description, photo_url, lat, lng, reporter_token) VALUES (?, ?, ?, ?, ?, ?)');
     const insertUpdate = db.prepare('INSERT INTO case_updates (case_id, status, note) VALUES (?, ?, ?)');
     
     const transaction = db.transaction(() => {
-      const info = insertCase.run(species, description || null, lat, lng, token);
+      const info = insertCase.run(species, description || null, photo_url, lat, lng, token);
       insertUpdate.run(info.lastInsertRowid, 'pending', 'Case created');
       return info.lastInsertRowid;
     });
@@ -520,14 +564,14 @@ async function startServer() {
   });
 
   app.get('/api/cases', requireRole('admin', 'volunteer'), (req, res) => {
-    const cases = db.prepare('SELECT id, species, description, lat, lng, status, created_at FROM cases ORDER BY created_at DESC').all();
+    const cases = db.prepare('SELECT id, species, description, photo_url, lat, lng, status, created_at FROM cases ORDER BY created_at DESC').all();
     res.json(cases);
   });
 
   // Public case tracking by token
   app.get('/api/cases/track/:token', (req, res) => {
     const { token } = req.params;
-    const caseRow = db.prepare('SELECT id, species, description, lat, lng, status, created_at FROM cases WHERE reporter_token = ?').get(token) as any;
+    const caseRow = db.prepare('SELECT id, species, description, photo_url, lat, lng, status, created_at FROM cases WHERE reporter_token = ?').get(token) as any;
     if (!caseRow) {
       return res.status(404).json({ error: 'Case not found' });
     }
@@ -610,15 +654,7 @@ async function startServer() {
     res.json(posts);
   });
 
-  app.post('/api/lost-found', (req, res, next) => {
-    upload.single('photo')(req, res, (err) => {
-      if (!err) {
-        next();
-        return;
-      }
-      res.status(400).json({ error: err.message || 'Photo upload failed' });
-    });
-  }, (req, res) => {
+  app.post('/api/lost-found', uploadImageIfPresent, (req, res) => {
     const {
       report_type,
       species,
@@ -731,6 +767,7 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`DB path: ${dbPath}`);
+    console.log(`Uploads path: ${uploadDir}`);
   });
 }
 
