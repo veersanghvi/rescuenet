@@ -15,7 +15,7 @@ export default function Layout() {
         to={to}
         className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
           active
-            ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10'
+            ? 'text-[#E63946] bg-[#FEECEE]'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
         }`}
       >
@@ -25,12 +25,12 @@ export default function Layout() {
   };
   
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col">
-      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-slate-950 text-[#1F2937] dark:text-slate-100 font-sans flex flex-col">
+      <header className="bg-white border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5">
-            <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">rescue</span>
-            <span className="text-lg font-bold tracking-tight text-teal-600 dark:text-teal-400">near</span>
+            <span className="text-lg font-bold tracking-tight text-[#1F2937] dark:text-white">rescue</span>
+            <span className="text-lg font-bold tracking-tight text-[#E63946]">near</span>
           </Link>
           <nav className="flex items-center gap-1">
             <div className="hidden sm:flex items-center gap-1 mr-2">
@@ -43,19 +43,19 @@ export default function Layout() {
             <div className="flex sm:hidden items-center gap-1">
               <Link 
                 to="/track" 
-                className={`p-2 rounded-lg transition-colors ${location.pathname === '/track' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/track' ? 'text-[#E63946] bg-[#FEECEE]' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
               >
                 <Search className="w-4 h-4" />
               </Link>
               <Link 
                 to="/until-help" 
-                className={`p-2 rounded-lg transition-colors ${location.pathname === '/until-help' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/until-help' ? 'text-[#E63946] bg-[#FEECEE]' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
               >
                 <LifeBuoy className="w-4 h-4" />
               </Link>
               <Link 
                 to="/lost-found" 
-                className={`p-2 rounded-lg transition-colors ${location.pathname === '/lost-found' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/lost-found' ? 'text-[#E63946] bg-[#FEECEE]' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
               >
                 <HeartHandshake className="w-4 h-4" />
               </Link>
@@ -77,7 +77,7 @@ export default function Layout() {
             ) : (
               <Link
                 to="/login"
-                className={`p-2 rounded-lg transition-colors ${location.pathname === '/login' ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`p-2 rounded-lg transition-colors ${location.pathname === '/login' ? 'text-[#E63946] bg-[#FEECEE]' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
               >
                 <LogIn className="w-4 h-4" />
               </Link>

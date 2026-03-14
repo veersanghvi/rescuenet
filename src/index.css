@@ -6,6 +6,14 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+:root {
+  --color-primary: #e63946;
+  --color-secondary: #2a9d8f;
+  --color-accent: #f4a261;
+  --color-bg: #f9fafb;
+  --color-text: #1f2937;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -13,17 +21,13 @@ html {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background:
-    radial-gradient(1100px 500px at 15% -10%, rgba(20, 184, 166, 0.08), transparent 65%),
-    radial-gradient(900px 420px at 100% -20%, rgba(148, 163, 184, 0.1), transparent 70%),
-    #f8fafc;
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .dark body {
-  background:
-    radial-gradient(1100px 500px at 15% -10%, rgba(13, 148, 136, 0.1), transparent 65%),
-    radial-gradient(900px 420px at 100% -20%, rgba(15, 23, 42, 0.35), transparent 70%),
-    #020617;
+  color: #e5e7eb;
+  background: #020617;
 }
 
 /* Smooth theme transitions */
@@ -49,5 +53,41 @@ body {
 
 /* Custom range slider for teal accent */
 input[type="range"] {
-  accent-color: #0d9488;
+  accent-color: var(--color-secondary);
+}
+
+.ui-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.ui-input {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+}
+
+.ui-input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.16);
+}
+
+.btn-emergency {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-emergency:hover {
+  background: #d62f3d;
+}
+
+.btn-safe {
+  background: var(--color-secondary);
+  color: #ffffff;
+}
+
+.btn-safe:hover {
+  background: #24877b;
 }

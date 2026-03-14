@@ -88,7 +88,7 @@ export default function Home() {
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
         >
           <div className="flex items-center gap-2 text-slate-900 dark:text-white text-sm font-semibold">
-            <LifeBuoy className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <LifeBuoy className="w-4 h-4 text-[#2A9D8F]" />
             What to do until help arrives
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Immediate steps to keep you and the animal safe.</p>
@@ -98,7 +98,7 @@ export default function Home() {
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
         >
           <div className="flex items-center gap-2 text-slate-900 dark:text-white text-sm font-semibold">
-            <HeartHandshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <HeartHandshake className="w-4 h-4 text-[#2A9D8F]" />
             Lost & found animals board
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Post sightings and reunite animals faster.</p>
@@ -113,7 +113,7 @@ export default function Home() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by name, city, or area..."
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 dark:focus:border-teal-500"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]/25 focus:border-[#2A9D8F]"
           />
         </div>
 
@@ -123,7 +123,7 @@ export default function Home() {
             disabled={locating}
             className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-2 rounded-lg transition-all disabled:opacity-50 ${
               location
-                ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400'
+                ? 'bg-[#E9F6F4] border-[#2A9D8F]/40 text-[#2A9D8F]'
                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
@@ -239,7 +239,7 @@ export default function Home() {
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
         <Link
           to="/report"
-          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-6 rounded-lg shadow-lg shadow-teal-600/20 dark:shadow-teal-600/10 transition-all hover:shadow-xl"
+          className="flex items-center gap-2 bg-[#E63946] hover:bg-[#D62F3D] text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-[#E63946]/25 transition-all"
         >
           <Plus className="w-4 h-4" />
           Report a rescue
