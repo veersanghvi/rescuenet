@@ -9,11 +9,16 @@ import * as path from 'node:path';
 
 dotenv.config({ path: '.env.local' });
 
-const defaultDbPath = process.env.NODE_ENV === 'production' ? '/var/data/rescue.db' : 'rescue.db';
-const dbPath = process.env.DB_PATH || defaultDbPath;
+const dbPath = process.env.DB_PATH || 'rescue.db';
 const dbDir = path.dirname(dbPath);
 if (dbDir && dbDir !== '.') {
-  fs.mkdirSync(dbDir, { recursive: true });
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (err) {
+    // If a path is not writable (common on Render without a mounted disk),
+    // continue and let SQLite open the file path or fail with a clearer DB error.
+    console.warn(`Could not create DB directory ${dbDir}:`, (err as Error).message);
+  }
 }
 
 const db = new Database(dbPath);
