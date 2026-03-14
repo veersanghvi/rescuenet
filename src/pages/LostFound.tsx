@@ -65,7 +65,8 @@ export default function LostFound() {
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
 
     setSubmitting(true);
     try {
@@ -78,7 +79,7 @@ export default function LostFound() {
         throw new Error(err.error || 'Failed to post');
       }
       toast('Posted successfully', 'success');
-      (e.currentTarget as HTMLFormElement).reset();
+      form.reset();
       setPhotoPreview(null);
       loadPosts();
     } catch (err: any) {
