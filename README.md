@@ -1,52 +1,126 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# RescueNet
 
-# Run and deploy your AI Studio app
+RescueNet is an emergency animal rescue web platform for fast reporting, case tracking, volunteer operations, and lost-and-found posts.
 
-This contains everything you need to run your app locally.
+It is built as a full-stack TypeScript app:
+- Frontend: React + Vite
+- Backend: Express
+- Database: PostgreSQL (Neon)
+- Images: Cloudinary
 
-View your app in AI Studio: https://ai.studio/apps/b96c525b-0dde-4105-a61d-16fa10023c83
+## Core Features
 
-## Run Locally
+- Create rescue cases with location and optional photo
+- Track case progress with a unique reporter token
+- Admin and volunteer authentication with role-based access
+- NGO directory with species support, radius filtering, and search
+- Lost and found board with status updates
+- Species-specific first-aid guidance
+- Health endpoint for uptime monitoring
 
-**Prerequisites:**  Node.js
+## Tech Stack
+
+- React 19, Vite 6, TypeScript
+- Express 4
+- PostgreSQL via pg
+- Cloudinary for uploads
+- Google GenAI SDK for search assistance
+
+## Project Structure
+
+- src: frontend app pages and components
+- server.ts: backend API, auth, DB setup, and production server
+- public: static assets (robots, sitemap)
+- netlify.toml: frontend deployment redirects to backend API
+
+## Environment Variables
+
+Create a local environment file named .env.local.
+
+Required:
+- DATABASE_URL
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
 
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Local Development
 
-## Persistence (Render)
+Prerequisites:
+- Node.js 18+ recommended
 
-This app uses SQLite and supports configurable DB paths.
+Install dependencies:
+npm install
 
-1. Create a persistent disk in Render and mount it at `/var/data`
-2. Set environment variable `DB_PATH=/var/data/rescue.db`
-3. Set environment variable `UPLOAD_DIR=/var/data/uploads`
-3. Redeploy your Render service
+Start development server:
+npm run dev
 
-Without a mounted disk, data resets when the instance is recycled.
+The app runs on http://localhost:3000.
 
-## New Features
+## Production Build
 
-- `Until Help Arrives` page with practical species-specific first-aid steps
-- `Lost & Found` board for community reunion reports
-- Optional photo uploads for rescue cases and lost/found posts (500KB max)
-- NGO create/delete is restricted to admin users
-- SEO assets: metadata, `robots.txt`, and `sitemap.xml`
+Build frontend:
+npm run build
 
-## Keep Backend + DB Warm (Emergency Setup)
+Run server in production mode:
+npm run start
 
-For low-latency emergency reports, keep both Render and Neon warm:
+## API Overview
 
-1. In Render environment variables, set:
-   - `KEEP_DB_AWAKE=true`
-   - `KEEP_DB_AWAKE_INTERVAL_MS=55000`
-2. Ensure your Render service does not sleep (plan/config dependent).
-3. Use an uptime monitor to hit `https://rescuenet-az60.onrender.com/api/healthz` every minute.
-4. Optional: this repo includes a GitHub Actions cron workflow in `.github/workflows/keepalive.yml` that pings the same health endpoint every minute.
+Auth:
+- POST /api/auth/login
+- POST /api/auth/logout
+- GET /api/auth/me
+- POST /api/auth/users (admin)
+- GET /api/auth/users (admin)
+- DELETE /api/auth/users/:id (admin)
 
-This setup minimizes cold starts from both app host and Neon autosuspend.
+NGOs:
+- GET /api/ngos
+- POST /api/ngos (admin)
+- DELETE /api/ngos/:id (admin)
+
+Cases:
+- POST /api/cases
+- GET /api/cases (admin, volunteer)
+- GET /api/cases/track/:token
+- PATCH /api/cases/:id/status (admin, volunteer)
+
+First Aid:
+- GET /api/first-aid
+
+Lost and Found:
+- GET /api/lost-found
+- POST /api/lost-found
+- PATCH /api/lost-found/:id/status (admin, volunteer)
+
+Search:
+- POST /api/search
+
+Ops:
+- GET /api/healthz
+
+## Deployment Notes
+
+Current deployment pattern:
+- Frontend hosted on Netlify
+- API hosted on Render
+- Database hosted on Neon
+
+The frontend forwards /api requests to Render via [netlify.toml](netlify.toml).
+
+## Warm Startup for Emergency Traffic
+
+To reduce first-request latency:
+
+1. Set backend env variables on Render:
+   - KEEP_DB_AWAKE=true
+   - KEEP_DB_AWAKE_INTERVAL_MS=55000
+2. Ensure Render service does not sleep.
+3. Keep Neon compute warm with periodic traffic.
+
+This repository includes a scheduled GitHub Actions ping job at [.github/workflows/keepalive.yml](.github/workflows/keepalive.yml).
+
+## License
+
+No license file is currently defined in this repository.
