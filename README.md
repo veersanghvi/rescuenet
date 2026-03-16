@@ -37,3 +37,16 @@ Without a mounted disk, data resets when the instance is recycled.
 - Optional photo uploads for rescue cases and lost/found posts (500KB max)
 - NGO create/delete is restricted to admin users
 - SEO assets: metadata, `robots.txt`, and `sitemap.xml`
+
+## Keep Backend + DB Warm (Emergency Setup)
+
+For low-latency emergency reports, keep both Render and Neon warm:
+
+1. In Render environment variables, set:
+   - `KEEP_DB_AWAKE=true`
+   - `KEEP_DB_AWAKE_INTERVAL_MS=55000`
+2. Ensure your Render service does not sleep (plan/config dependent).
+3. Use an uptime monitor to hit `https://rescuenet-az60.onrender.com/api/healthz` every minute.
+4. Optional: this repo includes a GitHub Actions cron workflow in `.github/workflows/keepalive.yml` that pings the same health endpoint every minute.
+
+This setup minimizes cold starts from both app host and Neon autosuspend.

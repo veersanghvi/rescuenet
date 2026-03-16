@@ -22,6 +22,51 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
 });
 
+const KEEP_DB_AWAKE = process.env.KEEP_DB_AWAKE === 'true';
+const KEEP_DB_AWAKE_INTERVAL_MS = Math.max(15000, Number(process.env.KEEP_DB_AWAKE_INTERVAL_MS || 55000));
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 5, baseDelayMs = 1200): Promise<T> {
+  let attempt = 1;
+  let lastErr: unknown;
+  while (attempt <= maxAttempts) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === maxAttempts) break;
+      const delay = baseDelayMs * attempt;
+      console.warn(`${label} failed (attempt ${attempt}/${maxAttempts}). Retrying in ${delay}ms...`);
+      await sleep(delay);
+      attempt += 1;
+    }
+  }
+  throw lastErr;
+}
+
+function startDbKeepAlive() {
+  if (!KEEP_DB_AWAKE || !process.env.DATABASE_URL) return;
+
+  const ping = async () => {
+    try {
+      await pool.query('SELECT 1');
+    } catch (err) {
+      console.error('DB keep-alive ping failed:', err);
+    }
+  };
+
+  void ping();
+  const timer = setInterval(() => {
+    void ping();
+  }, KEEP_DB_AWAKE_INTERVAL_MS);
+
+  // Let Node shut down cleanly in environments where the process may be recycled.
+  timer.unref();
+}
+
 // --- Multer memory storage (no disk — uploaded straight to Cloudinary) ---
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -297,13 +342,24 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 async function startServer() {
-  await initDb();
-  await seedData();
+  await withRetry('Database init', initDb, 6, 1500);
+  await withRetry('Database seed', seedData, 6, 1500);
 
   const app = express();
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
+
+  app.get('/api/healthz', async (_req, res) => {
+    try {
+      await withRetry('Health check DB ping', async () => {
+        await pool.query('SELECT 1');
+      }, 3, 600);
+      res.json({ ok: true, db: 'up' });
+    } catch {
+      res.status(503).json({ ok: false, db: 'down' });
+    }
+  });
 
   const uploadImageIfPresent: express.RequestHandler = (req, res, next) => {
     if (!req.is('multipart/form-data')) { next(); return; }
@@ -657,7 +713,17 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Database: ${process.env.DATABASE_URL ? 'PostgreSQL (Neon)' : 'LOCAL — no DATABASE_URL set'}`);
+    if (KEEP_DB_AWAKE) {
+      console.log(`DB keep-alive enabled (${KEEP_DB_AWAKE_INTERVAL_MS}ms)`);
+    }
   });
 }
 
-startServer();
+startServer()
+  .then(() => {
+    startDbKeepAlive();
+  })
+  .catch((err) => {
+    console.error('Server failed to start:', err);
+    process.exit(1);
+  });
