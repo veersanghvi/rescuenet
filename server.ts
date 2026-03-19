@@ -164,6 +164,15 @@ async function initDb() {
   await pool.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS reporter_token TEXT`);
   await pool.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS photo_url TEXT`);
   await pool.query(`ALTER TABLE lost_found_posts ADD COLUMN IF NOT EXISTS photo_url TEXT`);
+
+  // Performance indexes - created only if they don't exist
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_cases_reporter_token ON cases(reporter_token)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_ngo_species_species ON ngo_species(species)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_lost_found_status ON lost_found_posts(status)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_lost_found_type ON lost_found_posts(report_type)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_ngos_lat_lng ON ngos(lat, lng)`);
 }
 
 // Password hashing
@@ -313,8 +322,10 @@ async function seedData() {
           [ngo.name, ngo.phone, ngo.address, ngo.lat, ngo.lng, ngo.radius, ngo.accepting]
         );
         const ngoId = r.rows[0].id;
-        for (const sp of ngo.species) {
-          await client.query('INSERT INTO ngo_species (ngo_id, species) VALUES ($1, $2)', [ngoId, sp]);
+        // Batch insert species to reduce database round-trips
+        if (ngo.species.length > 0) {
+          const values = ngo.species.map((sp, idx) => `($1, $${idx + 2})`).join(', ');
+          await client.query(`INSERT INTO ngo_species (ngo_id, species) VALUES ${values}`, [ngoId, ...ngo.species]);
         }
       }
       await client.query('COMMIT');
@@ -349,6 +360,30 @@ async function startServer() {
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
+
+  // Performance monitoring middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    const originalSend = res.json;
+
+    res.json = function(data: any) {
+      const duration = Date.now() - start;
+
+      // Log slow requests (> 500ms)
+      if (duration > 500) {
+        console.warn(`[SLOW REQUEST] ${req.method} ${req.path} - ${duration}ms`);
+      }
+
+      // Log all API requests in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[API] ${req.method} ${req.path} - ${duration}ms`);
+      }
+
+      return originalSend.call(this, data);
+    };
+
+    next();
+  });
 
   app.get('/api/healthz', async (_req, res) => {
     try {
@@ -482,6 +517,63 @@ async function startServer() {
         paramIdx += 2;
       }
 
+      // Use SQL-based distance calculation when lat/lng are provided
+      if (lat && lng) {
+        const userLat = parseFloat(lat as string);
+        const userLng = parseFloat(lng as string);
+        const userRadius = radius ? parseFloat(radius as string) : 999999; // Large default if no radius
+
+        if (!isNaN(userLat) && !isNaN(userLng)) {
+          // Calculate distance in SQL using Haversine formula
+          let sql = `
+            SELECT n.id, n.name, n.phone, n.address, n.lat, n.lng, n.coverage_radius, n.is_accepting_cases,
+                   STRING_AGG(s.species, ',') as species_list,
+                   (6371 * acos(
+                     LEAST(1.0, GREATEST(-1.0,
+                       cos(radians($${paramIdx})) * cos(radians(n.lat)) *
+                       cos(radians(n.lng) - radians($${paramIdx + 1})) +
+                       sin(radians($${paramIdx})) * sin(radians(n.lat))
+                     ))
+                   )) as distance
+            FROM ngos n LEFT JOIN ngo_species s ON n.id = s.ngo_id
+          `;
+          params.push(userLat, userLng);
+          paramIdx += 2;
+
+          if (conditions.length > 0) sql += ' WHERE ' + conditions.join(' AND ');
+          sql += ' GROUP BY n.id, n.name, n.phone, n.address, n.lat, n.lng, n.coverage_radius, n.is_accepting_cases';
+
+          // Filter by distance in SQL using HAVING clause
+          sql += ` HAVING (6371 * acos(
+            LEAST(1.0, GREATEST(-1.0,
+              cos(radians($${paramIdx - 2})) * cos(radians(n.lat)) *
+              cos(radians(n.lng) - radians($${paramIdx - 1})) +
+              sin(radians($${paramIdx - 2})) * sin(radians(n.lat))
+            ))
+          )) <= n.coverage_radius AND (6371 * acos(
+            LEAST(1.0, GREATEST(-1.0,
+              cos(radians($${paramIdx - 2})) * cos(radians(n.lat)) *
+              cos(radians(n.lng) - radians($${paramIdx - 1})) +
+              sin(radians($${paramIdx - 2})) * sin(radians(n.lat))
+            ))
+          )) <= $${paramIdx}`;
+          params.push(userRadius);
+
+          sql += ' ORDER BY distance';
+
+          const result = await pool.query(sql, params);
+          const ngos = result.rows.map((ngo: any) => ({
+            ...ngo,
+            species: ngo.species_list ? ngo.species_list.split(',') : [],
+            distance: parseFloat(ngo.distance)
+          }));
+
+          res.json(ngos);
+          return;
+        }
+      }
+
+      // Fallback for queries without location
       let sql = `
         SELECT n.id, n.name, n.phone, n.address, n.lat, n.lng, n.coverage_radius, n.is_accepting_cases,
                STRING_AGG(s.species, ',') as species_list
@@ -496,16 +588,6 @@ async function startServer() {
         species: ngo.species_list ? ngo.species_list.split(',') : [],
       }));
 
-      if (lat && lng) {
-        const userLat = parseFloat(lat as string);
-        const userLng = parseFloat(lng as string);
-        const userRadius = radius ? parseFloat(radius as string) : Infinity;
-        if (!isNaN(userLat) && !isNaN(userLng)) {
-          const withDist = ngos.map(n => ({ ...n, distance: getDistance(userLat, userLng, n.lat, n.lng) }));
-          res.json(withDist.filter(n => n.distance <= n.coverage_radius && n.distance <= userRadius).sort((a, b) => a.distance - b.distance));
-          return;
-        }
-      }
       res.json(ngos);
     } catch { res.status(500).json({ error: 'Failed to load NGOs' }); }
   });
@@ -524,8 +606,10 @@ async function startServer() {
           [name, phone, address, lat, lng, coverage_radius || 20]
         );
         const ngoId = r.rows[0].id;
-        if (Array.isArray(species)) {
-          for (const sp of species) await client.query('INSERT INTO ngo_species (ngo_id, species) VALUES ($1, $2)', [ngoId, sp]);
+        // Batch insert species to reduce database round-trips
+        if (Array.isArray(species) && species.length > 0) {
+          const values = species.map((sp, idx) => `($1, $${idx + 2})`).join(', ');
+          await client.query(`INSERT INTO ngo_species (ngo_id, species) VALUES ${values}`, [ngoId, ...species]);
         }
         await client.query('COMMIT');
         res.status(201).json({ id: ngoId });
@@ -571,9 +655,17 @@ async function startServer() {
     } catch { res.status(500).json({ error: 'Failed to create case' }); }
   });
 
-  app.get('/api/cases', requireRole('admin', 'volunteer'), async (_req, res) => {
+  app.get('/api/cases', requireRole('admin', 'volunteer'), async (req, res) => {
     try {
-      const r = await pool.query('SELECT id, species, description, photo_url, lat, lng, status, created_at FROM cases ORDER BY created_at DESC');
+      const { limit, offset } = req.query;
+      // Add pagination with default limit of 100
+      const pageLimit = limit ? Math.min(parseInt(String(limit)), 500) : 100;
+      const pageOffset = offset ? parseInt(String(offset)) : 0;
+
+      const r = await pool.query(
+        'SELECT id, species, description, photo_url, lat, lng, status, created_at FROM cases ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+        [pageLimit, pageOffset]
+      );
       res.json(r.rows);
     } catch { res.status(500).json({ error: 'Failed to load cases' }); }
   });
@@ -622,7 +714,7 @@ async function startServer() {
   // --- Lost & Found ---
   app.get('/api/lost-found', async (req, res) => {
     try {
-      const { status, type, q } = req.query;
+      const { status, type, q, limit, offset } = req.query;
       const conditions: string[] = [];
       const params: any[] = [];
       let paramIdx = 1;
@@ -639,6 +731,13 @@ async function startServer() {
       let sql = 'SELECT * FROM lost_found_posts';
       if (conditions.length > 0) sql += ` WHERE ${conditions.join(' AND ')}`;
       sql += ' ORDER BY created_at DESC';
+
+      // Add pagination with default limit of 50
+      const pageLimit = limit ? Math.min(parseInt(String(limit)), 100) : 50;
+      const pageOffset = offset ? parseInt(String(offset)) : 0;
+      sql += ` LIMIT $${paramIdx++} OFFSET $${paramIdx++}`;
+      params.push(pageLimit, pageOffset);
+
       const r = await pool.query(sql, params);
       res.json(r.rows);
     } catch { res.status(500).json({ error: 'Failed to load posts' }); }

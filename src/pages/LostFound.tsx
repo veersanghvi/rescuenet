@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import { authHeaders, useAuth } from '../components/Auth';
+import { getThumbnailUrl } from '../utils/cloudinary';
 
 type ReportType = 'lost' | 'found';
 
@@ -175,7 +176,7 @@ export default function LostFound() {
                 <h2 className="text-sm font-semibold text-[#1F2937] dark:text-white">{post.title}</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{post.area} {post.last_seen_at ? `• ${post.last_seen_at}` : ''}</p>
                 {post.photo_url ? (
-                  <img src={post.photo_url} alt={post.title} className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
+                  <img src={getThumbnailUrl(post.photo_url) || post.photo_url} alt={post.title} className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
                 ) : null}
                 {post.description ? <p className="text-sm text-slate-600 dark:text-slate-300">{post.description}</p> : null}
 

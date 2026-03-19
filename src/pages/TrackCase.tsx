@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, MapPin, Clock, CheckCircle, Loader, AlertCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useToast } from '../components/Toast';
+import { getThumbnailUrl } from '../utils/cloudinary';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   pending: { label: 'Pending', color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800', icon: Clock },
@@ -109,7 +110,7 @@ export default function TrackCase() {
             )}
 
             {caseData.photo_url && (
-              <img src={caseData.photo_url} alt="Reported animal" className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
+              <img src={getThumbnailUrl(caseData.photo_url) || caseData.photo_url} alt="Reported animal" className="w-full h-44 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />
             )}
 
             <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
