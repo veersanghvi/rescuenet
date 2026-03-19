@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, UserPlus, Trash2, Users, FileText, X } from 'lucide-
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import { useAuth, authHeaders } from '../components/Auth';
+import { getThumbnailUrl } from '../utils/cloudinary';
 
 export default function Admin() {
   const { toast } = useToast();
@@ -155,7 +156,7 @@ export default function Admin() {
                 </select>
               </div>
               {c.description && <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">{c.description}</p>}
-              {c.photo_url && <img src={c.photo_url} alt={`Case ${c.id}`} className="w-full h-36 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />}
+              {c.photo_url && <img src={getThumbnailUrl(c.photo_url) || c.photo_url} alt={`Case ${c.id}`} className="w-full h-36 object-cover rounded-lg border border-slate-200 dark:border-slate-700" loading="lazy" />}
               <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.lat.toFixed(4)}, {c.lng.toFixed(4)}</span>
                 <span>{new Date(c.created_at).toLocaleDateString()}</span>
