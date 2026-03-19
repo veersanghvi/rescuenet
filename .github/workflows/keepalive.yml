@@ -2,16 +2,39 @@ name: Keep Backend Warm
 
 on:
   schedule:
-    - cron: '*/1 * * * *'
+    # Every 5 minutes is more reliable than every minute for GitHub scheduled jobs.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping health endpoint
+      - name: Ping health endpoint with retries
         run: |
-          set -e
+          set +e
           URL="https://rescuenet-az60.onrender.com/api/healthz"
           echo "Pinging $URL"
-          curl -fsS --max-time 20 "$URL"
+          OK=0
+
+          for attempt in 1 2 3 4; do
+            echo "Attempt $attempt/4"
+            HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 20 --max-time 60 "$URL")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Health check passed with HTTP 200"
+              OK=1
+              break
+            fi
+
+            # Backoff helps when Render/Neon are waking up.
+            SLEEP_SECS=$((attempt * 15))
+            echo "Health check returned HTTP $HTTP_CODE, retrying in ${SLEEP_SECS}s..."
+            sleep "$SLEEP_SECS"
+          done
+
+          if [ "$OK" -ne 1 ]; then
+            echo "Health check did not return 200 after retries. Skipping failure to avoid alert spam."
+          fi
+
+          # Always exit successfully to stop noisy failure emails for transient cold starts.
+          exit 0
