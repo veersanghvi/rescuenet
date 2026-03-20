@@ -20,6 +20,11 @@ cloudinary.config({
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
+  // Keep pool connections warm to reduce cold-start latency
+  min: 1, // Maintain at least 1 connection to keep the database compute warm
+  max: 10, // Allow up to 10 concurrent connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s to avoid resource waste
+  connectionTimeoutMillis: 10000, // 10s timeout for acquiring connections
 });
 
 const KEEP_DB_AWAKE = process.env.KEEP_DB_AWAKE === 'true';

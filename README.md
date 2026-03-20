@@ -111,15 +111,110 @@ The frontend forwards /api requests to Render via [netlify.toml](netlify.toml).
 
 ## Warm Startup for Emergency Traffic
 
-To reduce first-request latency:
+To reduce first-request latency and keep the backend continuously available, this project uses multiple warming mechanisms:
 
-1. Set backend env variables on Render:
-   - KEEP_DB_AWAKE=true
-   - KEEP_DB_AWAKE_INTERVAL_MS=55000
-2. Ensure Render service does not sleep.
-3. Keep Neon compute warm with periodic traffic.
+### 1. GitHub Actions Scheduled Ping (Primary)
 
-This repository includes a scheduled GitHub Actions ping job at [.github/workflows/keepalive.yml](.github/workflows/keepalive.yml).
+A GitHub Actions workflow automatically pings the backend health endpoint every 5 minutes:
+- **File:** [.github/workflows/keepalive.yml](.github/workflows/keepalive.yml)
+- **Frequency:** Every 5 minutes (`*/5 * * * *`)
+- **Target:** `https://rescuenet-az60.onrender.com/api/healthz`
+- **Features:**
+  - 4 retry attempts with exponential backoff (15s, 30s, 45s, 60s)
+  - Handles Render/Neon cold-start delays gracefully
+  - Can be manually triggered via GitHub Actions UI
+
+### 2. Database Keep-Alive (Built-in)
+
+The server includes an internal database ping mechanism to keep Neon compute warm:
+- **Implementation:** `server.ts` lines 50-68
+- **How it works:** Runs `SELECT 1` queries at regular intervals
+- **Configuration:**
+  ```bash
+  KEEP_DB_AWAKE="true"                    # Enable database keep-alive
+  KEEP_DB_AWAKE_INTERVAL_MS="55000"      # Ping every 55 seconds (recommended)
+  ```
+- **Benefits:** Keeps database connections active even when no API requests are made
+
+### 3. Database Connection Pool Optimization
+
+The PostgreSQL connection pool is configured to maintain warm connections:
+- **Min connections:** 1 (always maintains at least 1 open connection)
+- **Max connections:** 10 (allows burst traffic)
+- **Idle timeout:** 30 seconds (closes inactive connections to save resources)
+- **Connection timeout:** 10 seconds (fail fast if database is unavailable)
+
+### 4. External Monitoring Services (Optional)
+
+For additional redundancy, you can use free uptime monitoring services:
+
+**Recommended Options:**
+- **UptimeRobot** (https://uptimerobot.com)
+  - Free tier: 50 monitors, 5-minute checks
+  - Setup: Add monitor for `https://rescuenet-az60.onrender.com/api/healthz`
+  - Benefits: Email/SMS alerts, public status page
+
+- **Better Stack** (https://betterstack.com)
+  - Free tier: 10 monitors, 3-minute checks
+  - Advanced features: Incident management, on-call scheduling
+
+- **Cron-Job.org** (https://cron-job.org)
+  - Free tier: Unlimited jobs, 1-minute checks
+  - Simple HTTP GET requests to keep service alive
+
+### 5. Render Configuration (render.yaml)
+
+The `render.yaml` file configures Render-specific settings:
+- Health check endpoint: `/api/healthz`
+- Environment variables: Pre-configured keep-alive settings
+- **Note:** Free tier auto-sleeps after 15 minutes of inactivity (cannot be disabled)
+- **Upgrade option:** Paid plans can use "Always On" feature to prevent sleep entirely
+
+### How to Verify Backend is Staying Warm
+
+1. **Check GitHub Actions:**
+   - Visit: https://github.com/veersanghvi/rescuenet/actions
+   - Look for "Keep Backend Warm" workflow runs
+   - Should show successful runs every 5 minutes
+
+2. **Monitor health endpoint:**
+   ```bash
+   curl https://rescuenet-az60.onrender.com/api/healthz
+   # Expected response: {"ok":true,"db":"up"}
+   ```
+
+3. **Check response times:**
+   - Warm backend: < 200ms response time
+   - Cold start: 10-30 seconds initial request (then warm)
+
+### Troubleshooting Cold Starts
+
+If the backend still goes to sleep:
+
+1. **Verify environment variables on Render:**
+   - Ensure `KEEP_DB_AWAKE=true` is set
+   - Check `KEEP_DB_AWAKE_INTERVAL_MS=55000`
+
+2. **Check GitHub Actions workflow:**
+   - Ensure workflow is enabled (not paused)
+   - Verify no recent failures in Actions tab
+
+3. **Consider adding external monitoring:**
+   - UptimeRobot provides additional redundancy
+   - Helps identify downtime patterns
+
+4. **Upgrade to paid plan (if needed):**
+   - Render paid plans offer "Always On" feature
+   - Completely eliminates auto-sleep behavior
+
+### Cost-Free Warming Strategy (Current Setup)
+
+✅ GitHub Actions (free for public repos)
+✅ Database keep-alive (built-in, no cost)
+✅ Connection pool optimization (built-in, no cost)
+✅ External monitoring (free tiers available)
+
+This multi-layered approach ensures maximum uptime without additional costs.
 
 ## License
 
