@@ -2,7 +2,7 @@ name: Keep Backend Warm
 
 on:
   schedule:
-    # Every 5 minutes is more reliable than every minute for GitHub scheduled jobs.
+    # Every 5 minutes to keep the backend warm and prevent it from sleeping.
     - cron: '*/5 * * * *'
   workflow_dispatch:
 

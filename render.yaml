@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: rescuenet-backend
+    runtime: node
+    plan: free
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: KEEP_DB_AWAKE
+        value: true
+      - key: KEEP_DB_AWAKE_INTERVAL_MS
+        value: 55000
+    healthCheckPath: /api/healthz
+    # Free tier limitations:
+    # - Auto-sleeps after 15 minutes of inactivity
+    # - Cannot be disabled on free tier
+    #
+    # To prevent sleep on free tier:
+    # 1. Use GitHub Actions to ping every 5 minutes (already configured)
+    # 2. Use external monitoring service (UptimeRobot, Better Stack, etc.)
+    #
+    # To completely disable auto-sleep (paid tiers only):
+    # Uncomment the following line if you upgrade to a paid plan:
+    # autoDeploy: true
+    #
+    # Note: On paid plans, you can set maxIdleMinutes to a very high value
+    # or use Always On feature to prevent sleep entirely
