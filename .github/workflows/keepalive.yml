@@ -2,8 +2,8 @@ name: Keep Backend Warm
 
 on:
   schedule:
-    # Every 20 minutes to keep the backend warm and prevent it from sleeping.
-    - cron: '*/20 * * * *'
+    # Every 5 minutes to keep the backend warm and prevent it from sleeping.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
